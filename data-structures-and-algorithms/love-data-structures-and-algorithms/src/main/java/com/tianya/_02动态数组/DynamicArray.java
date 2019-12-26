@@ -30,6 +30,9 @@ public class DynamicArray<E> {
      * 清除所有元素
      */
     public void clear(){
+        for (int i = 0; i < size; i++) {
+            elements[i] = null;
+        }
         size = 0;
     }
 
@@ -117,7 +120,7 @@ public class DynamicArray<E> {
         for (int i = index+1; i <= size -1 ; i++) {
             elements[i-1] = elements[i];
         }
-        size --;
+        elements[--size] = null;
         return old;
     }
 
@@ -127,8 +130,15 @@ public class DynamicArray<E> {
      * @return
      */
     public int indexof(E element){
+        if(null ==element){
+            for (int i = 0; i < size; i++) {
+                if(elements[i] ==null){
+                    return i;
+                }
+            }
+        }
         for (int i = 0; i <size; i++) {
-            if(elements[i]==element){return i;}
+            if(element.equals(elements[i])){return i;}
         }
         return ELEMENT_NOT_FOUND;
     }
