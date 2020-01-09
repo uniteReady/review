@@ -13,5 +13,47 @@
     <artifactId>spark-zhonghuashishan</artifactId>
     <version>1.0</version>
 
+    <repositories>
+        <repository>
+            <id>cdh.repo</id>
+            <url>https://repository.cloudera.com/artifactory/cloudera-repos</url>
+        </repository>
+        <repository>
+            <id>cdh.snapshots.repo</id>
+            <url>https://repository.cloudera.com/artifactory/libs-snapshot-local</url>
+        </repository>
+        <repository>
+            <id>aliyunmaven</id>
+            <url>http://maven.aliyun.com/nexus/content/groups/public/</url>
+        </repository>
+        <repository>
+            <id>elastic.co</id>
+            <url>https://artifacts.elastic.co/maven</url>
+        </repository>
+    </repositories>
+
+    <properties>
+        <scala.binary.version>2.11</scala.binary.version>
+        <spark.version>2.3.0</spark.version>
+        <hadoop.version>2.6.0-cdh5.16.1</hadoop.version>
+    </properties>
+
+    <dependencies>
+
+        <!--添加spark core 的依赖 http://spark.apache.org/docs/2.3.0/rdd-programming-guide.html-->
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-core_${scala.binary.version}</artifactId>
+            <version>${spark.version}</version>
+        </dependency>
+
+        <!--添加访问hdfs的依赖 http://spark.apache.org/docs/2.3.0/rdd-programming-guide.html-->
+        <!--<dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-client</artifactId>
+            <version>${hadoop.version}</version>
+        </dependency>-->
+    </dependencies>
+
 
 </project>
