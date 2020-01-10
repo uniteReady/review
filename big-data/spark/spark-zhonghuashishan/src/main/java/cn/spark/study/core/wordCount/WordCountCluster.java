@@ -61,11 +61,12 @@ public class WordCountCluster {
             }
         });
 
-        wordCountRDD.foreach(new VoidFunction<Tuple2<String, Integer>>() {
-            public void call(Tuple2<String, Integer> wordCount) throws Exception {
-                System.out.println(wordCount._1+" appeared "+wordCount._2 + " times .");
-            }
-        });
+
+        for (Tuple2<String, Integer> wordcount : wordCountRDD.collect()) {
+            System.out.println(wordcount._1+" appeared "+wordcount._2 + " times .");
+        }
+
+
 
     }
 }
