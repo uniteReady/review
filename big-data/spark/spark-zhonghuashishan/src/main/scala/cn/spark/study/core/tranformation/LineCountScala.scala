@@ -14,9 +14,9 @@ object LineCountScala {
 
     val linesRDD: RDD[String] = sc.textFile(path)
 
-    val resultRDD: RDD[(String, Int)] = linesRDD.map((_,1)).reduceByKey(_+_)
+    val resultRDD: RDD[(String, Int)] = linesRDD.map((_, 1)).reduceByKey(_ + _)
 
-    resultRDD.foreach(result => println(result._1+ " appeared "+ result._2 + " times."))
+    resultRDD.foreach(result => println(result._1 + " appeared " + result._2 + " times."))
 
     sc.stop()
   }

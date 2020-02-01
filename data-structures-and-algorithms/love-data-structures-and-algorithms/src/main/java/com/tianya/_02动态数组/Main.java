@@ -10,7 +10,7 @@ public class Main {
         dynamicArray.add(77);
         dynamicArray.add(66);
 
-        dynamicArray.add(4,999);
+        dynamicArray.add(4, 999);
         System.out.println(dynamicArray);
     }
 }

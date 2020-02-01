@@ -13,7 +13,7 @@ object AccumulatorScala {
 
     val sumAccumulator: LongAccumulator = sc.longAccumulator("sumAccumulator")
 
-    val numsRDD: RDD[Long] = sc.parallelize(List(1L,2L,3L,4L,5L))
+    val numsRDD: RDD[Long] = sc.parallelize(List(1L, 2L, 3L, 4L, 5L))
 
     numsRDD.foreach(x => sumAccumulator.add(x))
     println(sumAccumulator.value)

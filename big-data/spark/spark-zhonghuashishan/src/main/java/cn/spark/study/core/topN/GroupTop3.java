@@ -56,10 +56,10 @@ public class GroupTop3 {
                             top3Array[i] = score;
                             break;
                         } else if (score > top3Array[i]) {
-                            for (int j = topN -1; j >i; j--) {
-                                top3Array[j]=top3Array[j-1];
+                            for (int j = topN - 1; j > i; j--) {
+                                top3Array[j] = top3Array[j - 1];
                             }
-                            top3Array[i]= score;
+                            top3Array[i] = score;
                             break;
                         }
                     }
@@ -72,7 +72,7 @@ public class GroupTop3 {
         groupTop3RDD.foreach(new VoidFunction<Tuple2<String, List<Integer>>>() {
             @Override
             public void call(Tuple2<String, List<Integer>> t) throws Exception {
-                System.out.println("className: "+ t._1);
+                System.out.println("className: " + t._1);
                 for (Integer integer : t._2) {
                     System.out.println(integer);
                 }

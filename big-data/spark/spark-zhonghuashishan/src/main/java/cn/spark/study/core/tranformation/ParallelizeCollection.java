@@ -24,7 +24,7 @@ public class ParallelizeCollection {
             }
         });
 
-        System.out.println("1到10的总和为:"+result);
+        System.out.println("1到10的总和为:" + result);
 
         sc.close();
     }

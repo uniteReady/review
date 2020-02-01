@@ -14,9 +14,82 @@
     <version>1.0</version>
     <modules>
         <module>spark-zhonghuashishan</module>
-        <!--<module>spark2.2-core-source</module>-->
+        <module>spark-atguigu</module>
     </modules>
     <packaging>pom</packaging>
+
+    <repositories>
+        <repository>
+            <id>cdh.repo</id>
+            <url>https://repository.cloudera.com/artifactory/cloudera-repos</url>
+        </repository>
+        <repository>
+            <id>cdh.snapshots.repo</id>
+            <url>https://repository.cloudera.com/artifactory/libs-snapshot-local</url>
+        </repository>
+        <repository>
+            <id>aliyunmaven</id>
+            <url>http://maven.aliyun.com/nexus/content/groups/public/</url>
+        </repository>
+        <repository>
+            <id>elastic.co</id>
+            <url>https://artifacts.elastic.co/maven</url>
+        </repository>
+    </repositories>
+
+    <properties>
+        <scala.binary.version>2.11</scala.binary.version>
+        <spark.version>2.3.0</spark.version>
+        <hadoop.version>2.6.0</hadoop.version>
+        <hive.version>1.2.1</hive.version>
+    </properties>
+
+    <dependencies>
+
+        <!--添加spark core 的依赖 http://spark.apache.org/docs/2.3.0/rdd-programming-guide.html-->
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-core_${scala.binary.version}</artifactId>
+            <version>${spark.version}</version>
+        </dependency>
+        <!--添加spark sql 的依赖-->
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-sql_${scala.binary.version}</artifactId>
+            <version>${spark.version}</version>
+        </dependency>
+        <!--添加spark sql 的hive依赖-->
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-hive_${scala.binary.version}</artifactId>
+            <version>${spark.version}</version>
+        </dependency>
+        <!--添加hive 的依赖-->
+        <dependency>
+            <groupId>org.apache.hive</groupId>
+            <artifactId>hive-exec</artifactId>
+            <version>${hive.version}</version>
+        </dependency>
+
+        <!--spark streaming 的依赖-->
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-streaming_${scala.binary.version}</artifactId>
+            <version>${spark.version}</version>
+        </dependency>
+
+        <!--<dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-client</artifactId>
+            <version>${hadoop.version}</version>
+        </dependency>-->
+
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-streaming-kafka-0-10_${scala.binary.version}</artifactId>
+            <version>${spark.version}</version>
+        </dependency>
+    </dependencies>
 
 
 </project>

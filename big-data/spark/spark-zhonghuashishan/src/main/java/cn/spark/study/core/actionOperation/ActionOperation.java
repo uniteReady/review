@@ -37,17 +37,17 @@ public class ActionOperation {
                 new Tuple2<String, String>("class2", "jerry"),
                 new Tuple2<String, String>("class1", "marry")
         );
-        JavaPairRDD<String,String> javaPairRDD = sc.parallelizePairs(students);
+        JavaPairRDD<String, String> javaPairRDD = sc.parallelizePairs(students);
 
         Map<String, Long> stringLongMap = javaPairRDD.countByKey();
         for (Map.Entry<String, Long> entry : stringLongMap.entrySet()) {
-            System.out.println("class: "+entry.getKey()+" , studentCount: "+ entry.getValue());
+            System.out.println("class: " + entry.getKey() + " , studentCount: " + entry.getValue());
         }
 
         sc.close();
     }
 
-    public static void  saveAsTextFile(){
+    public static void saveAsTextFile() {
         SparkConf conf = new SparkConf().setMaster("local").setAppName("take");
         JavaSparkContext sc = new JavaSparkContext(conf);
         JavaRDD<Integer> numsRDD = sc.parallelize(Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10));
@@ -64,7 +64,7 @@ public class ActionOperation {
         sc.close();
     }
 
-    public  static  void  take(){
+    public static void take() {
         SparkConf conf = new SparkConf().setMaster("local").setAppName("take");
         JavaSparkContext sc = new JavaSparkContext(conf);
         JavaRDD<Integer> numsRDD = sc.parallelize(Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10));
@@ -79,7 +79,7 @@ public class ActionOperation {
     }
 
 
-    public static  void  count(){
+    public static void count() {
         SparkConf conf = new SparkConf().setMaster("local").setAppName("count");
         JavaSparkContext sc = new JavaSparkContext(conf);
         JavaRDD<Integer> numsRDD = sc.parallelize(Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10));
@@ -90,7 +90,7 @@ public class ActionOperation {
         sc.close();
     }
 
-    public static void  collect(){
+    public static void collect() {
         SparkConf conf = new SparkConf().setMaster("local").setAppName("collect");
         JavaSparkContext sc = new JavaSparkContext(conf);
         JavaRDD<Integer> numsRDD = sc.parallelize(Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10));
@@ -108,7 +108,7 @@ public class ActionOperation {
         sc.close();
     }
 
-    public static  void  reduce(){
+    public static void reduce() {
         SparkConf conf = new SparkConf().setMaster("local").setAppName("reduce");
         JavaSparkContext sc = new JavaSparkContext(conf);
         List<Integer> nums = Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);

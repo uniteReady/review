@@ -8,12 +8,12 @@ import java.util.Objects;
 /**
  * 自定义的二次排序key
  */
-public class SecondarySortKey implements Ordered<SecondarySortKey> , Serializable {
+public class SecondarySortKey implements Ordered<SecondarySortKey>, Serializable {
 
     //首先在自定义的 key里面 ，定义需要进行排序的列
-    private   Integer first;
+    private Integer first;
 
-    private  Integer second;
+    private Integer second;
 
     //其次 为要进行排序的多个列，提供getter和setter方法 以及hashcode和equals方法
 
@@ -50,37 +50,37 @@ public class SecondarySortKey implements Ordered<SecondarySortKey> , Serializabl
 
     @Override
     public int compare(SecondarySortKey other) {
-        if(this.first - other.first != 0){
+        if (this.first - other.first != 0) {
             return this.first - other.first;
-        }else {
+        } else {
             return this.second - other.second;
         }
     }
 
     @Override
-    public int compareTo( SecondarySortKey other) {
-        if(this.first - other.first != 0){
+    public int compareTo(SecondarySortKey other) {
+        if (this.first - other.first != 0) {
             return this.first - other.first;
-        }else {
+        } else {
             return this.second - other.second;
         }
     }
 
     @Override
     public boolean $less(SecondarySortKey other) {
-        if(this.first < other .first){
-            return  true;
-        }else  if (this.first == other.first &&  this.second < other.second){
-            return  true;
+        if (this.first < other.first) {
+            return true;
+        } else if (this.first == other.first && this.second < other.second) {
+            return true;
         }
         return false;
     }
 
     @Override
     public boolean $greater(SecondarySortKey other) {
-        if(this.first > other.first){
-            return  true;
-        }else  if (this.first == other.first && this.second > other.second){
+        if (this.first > other.first) {
+            return true;
+        } else if (this.first == other.first && this.second > other.second) {
             return true;
         }
         return false;
@@ -88,9 +88,9 @@ public class SecondarySortKey implements Ordered<SecondarySortKey> , Serializabl
 
     @Override
     public boolean $less$eq(SecondarySortKey other) {
-        if(this.first == other.first && this.second == other.second){
+        if (this.first == other.first && this.second == other.second) {
             return true;
-        }else  if(this.$less(other)){
+        } else if (this.$less(other)) {
             return true;
         }
         return false;
@@ -98,9 +98,9 @@ public class SecondarySortKey implements Ordered<SecondarySortKey> , Serializabl
 
     @Override
     public boolean $greater$eq(SecondarySortKey other) {
-        if(this.first == other.first && this.second == other.second){
-            return  true;
-        }else  if (this.$greater(other)){
+        if (this.first == other.first && this.second == other.second) {
+            return true;
+        } else if (this.$greater(other)) {
             return true;
         }
         return false;

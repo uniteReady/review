@@ -10,7 +10,7 @@ object Top3Scala {
 
     val path = "E:\\WorkSpace\\IDEAWorkspace\\review\\big-data\\spark\\spark-zhonghuashishan\\src\\main\\resources\\top.txt"
     sc.textFile(path)
-      .map(x=>(x.toInt,1))
+      .map(x => (x.toInt, 1))
       .sortByKey(false)
       .map(x => x._1)
       .take(3)

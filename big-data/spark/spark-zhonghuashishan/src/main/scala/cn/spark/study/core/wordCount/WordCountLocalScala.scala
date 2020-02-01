@@ -11,9 +11,9 @@ object WordCountLocalScala {
     val path: String = "F:\\tianyafu\\tianyafu_github\\review\\big-data\\spark\\spark-zhonghuashishan\\src\\main\\resources\\spark.txt"
     val lines: RDD[String] = sc.textFile(path)
 
-    val wordCount: RDD[(String, Int)] = lines.flatMap(_.split(" ")).map((_,1)).reduceByKey(_+_)
+    val wordCount: RDD[(String, Int)] = lines.flatMap(_.split(" ")).map((_, 1)).reduceByKey(_ + _)
 
-    wordCount.foreach(x => println(x._1 +" appeared " +x._2 +" times."))
+    wordCount.foreach(x => println(x._1 + " appeared " + x._2 + " times."))
 
   }
 

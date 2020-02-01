@@ -7,45 +7,45 @@ object TranformationOperationScala {
 
   def main(args: Array[String]): Unit = {
     //    map()
-//    filter()
-//    flatMap()
-//    groupByKey()
-//    reduceByKey()
-//    sortBykey()
-//    join()
+    //    filter()
+    //    flatMap()
+    //    groupByKey()
+    //    reduceByKey()
+    //    sortBykey()
+    //    join()
     cogroup()
   }
 
-  def cogroup():Unit={
+  def cogroup(): Unit = {
     val conf: SparkConf = new SparkConf().setMaster("local").setAppName("cogroup")
 
     val sc = new SparkContext(conf)
     val studentsRDD = sc.parallelize(
       List(
-        Tuple2(1,"leo"),
-        Tuple2(2,"jack"),
-        Tuple2(3,"tom")
+        Tuple2(1, "leo"),
+        Tuple2(2, "jack"),
+        Tuple2(3, "tom")
       )
     )
 
     val scoreRDD = sc.parallelize(
       List(
-        Tuple2(1,100),
-        Tuple2(2,70),
-        Tuple2(2,80),
-        Tuple2(3,70),
-        Tuple2(1,90),
-        Tuple2(3,70)
+        Tuple2(1, 100),
+        Tuple2(2, 70),
+        Tuple2(2, 80),
+        Tuple2(3, 70),
+        Tuple2(1, 90),
+        Tuple2(3, 70)
       )
     )
 
     val cogroupRDD: RDD[(Int, (Iterable[String], Iterable[Int]))] = studentsRDD.cogroup(scoreRDD)
 
     cogroupRDD.foreach(
-      x =>{
-        println("student id :"+ x._1)
+      x => {
+        println("student id :" + x._1)
         println("student name : " + x._2._1)
-        println("student score : "+ x._2._2)
+        println("student score : " + x._2._2)
         println("===================")
       }
     )
@@ -54,27 +54,27 @@ object TranformationOperationScala {
     sc.stop()
   }
 
-  def join():Unit={
+  def join(): Unit = {
     val conf: SparkConf = new SparkConf().setMaster("local").setAppName("join")
 
     val sc = new SparkContext(conf)
 
     val studentsRDD = sc.parallelize(
       List(
-        Tuple2(1,"leo"),
-        Tuple2(2,"jack"),
-        Tuple2(3,"tom")
+        Tuple2(1, "leo"),
+        Tuple2(2, "jack"),
+        Tuple2(3, "tom")
       )
     )
 
     val scoreRDD = sc.parallelize(
       List(
-        Tuple2(1,100),
-        Tuple2(2,70),
-        Tuple2(2,80),
-        Tuple2(3,70),
-        Tuple2(1,90),
-        Tuple2(3,70)
+        Tuple2(1, 100),
+        Tuple2(2, 70),
+        Tuple2(2, 80),
+        Tuple2(3, 70),
+        Tuple2(1, 90),
+        Tuple2(3, 70)
       )
     )
     val joinRDD: RDD[(Int, (String, Int))] = studentsRDD.join(scoreRDD)
@@ -83,7 +83,7 @@ object TranformationOperationScala {
       x => {
         println("student id :" + x._1)
         println("student name :" + x._2._1)
-        println("student score: " + x._2._2 )
+        println("student score: " + x._2._2)
         println("============================")
       }
     )
@@ -92,17 +92,17 @@ object TranformationOperationScala {
   }
 
 
-  def sortBykey():Unit={
+  def sortBykey(): Unit = {
 
     val conf: SparkConf = new SparkConf().setMaster("local").setAppName("reduceByKey")
 
     val sc = new SparkContext(conf)
 
     val scores = sc.parallelize(Array(
-      new Tuple2[Integer,String](80,"tom"),
-      new Tuple2[Integer,String](65,"jerry"),
-      new Tuple2[Integer,String](90,"marry"),
-      new Tuple2[Integer,String](80,"susam")
+      new Tuple2[Integer, String](80, "tom"),
+      new Tuple2[Integer, String](65, "jerry"),
+      new Tuple2[Integer, String](90, "marry"),
+      new Tuple2[Integer, String](80, "susam")
     ))
 
     scores.sortByKey(false).foreach(println)
@@ -112,45 +112,45 @@ object TranformationOperationScala {
 
   }
 
-  def reduceByKey():Unit={
+  def reduceByKey(): Unit = {
     val conf: SparkConf = new SparkConf().setMaster("local").setAppName("reduceByKey")
 
     val sc = new SparkContext(conf)
 
     val scores = sc.parallelize(Array(
-      new Tuple2[String,Integer]("class1",80),
-      new Tuple2[String,Integer]("class2",65),
-      new Tuple2[String,Integer]("class2",90),
-      new Tuple2[String,Integer]("class1",80)
+      new Tuple2[String, Integer]("class1", 80),
+      new Tuple2[String, Integer]("class2", 65),
+      new Tuple2[String, Integer]("class2", 90),
+      new Tuple2[String, Integer]("class1", 80)
     ))
 
-    val resultRDD: RDD[(String, Integer)] = scores.reduceByKey(_+_)
+    val resultRDD: RDD[(String, Integer)] = scores.reduceByKey(_ + _)
 
-    resultRDD.foreach(x => println("class: "+ x._1 +" ,scoreSum: "+x._2))
+    resultRDD.foreach(x => println("class: " + x._1 + " ,scoreSum: " + x._2))
 
     sc.stop()
   }
 
-  def groupByKey():Unit={
+  def groupByKey(): Unit = {
     val conf: SparkConf = new SparkConf().setAppName("TranformationOperationScala").setMaster("local")
 
     val sc = new SparkContext(conf)
 
     val scores = sc.parallelize(Array(
-      new Tuple2[String,Integer]("class1",80),
-      new Tuple2[String,Integer]("class2",65),
-      new Tuple2[String,Integer]("class2",90),
-      new Tuple2[String,Integer]("class1",80)
+      new Tuple2[String, Integer]("class1", 80),
+      new Tuple2[String, Integer]("class2", 65),
+      new Tuple2[String, Integer]("class2", 90),
+      new Tuple2[String, Integer]("class1", 80)
     ))
 
     val groupedScore: RDD[(String, Iterable[Integer])] = scores.groupByKey()
 
     groupedScore.foreach(
       x => {
-        println("class: "+x._1)
+        println("class: " + x._1)
         val it: Iterator[Integer] = x._2.iterator
 
-        while (it.hasNext){
+        while (it.hasNext) {
           println(it.next())
         }
       }
@@ -160,12 +160,12 @@ object TranformationOperationScala {
     sc.stop()
   }
 
-  def flatMap():Unit={
+  def flatMap(): Unit = {
     val conf: SparkConf = new SparkConf().setAppName("TranformationOperationScala").setMaster("local")
 
     val sc = new SparkContext(conf)
 
-    val text:String = "hello world hello spark hello hadoop hello elasticsearch"
+    val text: String = "hello world hello spark hello hadoop hello elasticsearch"
     val textRDD: RDD[String] = sc.parallelize(Array(text))
 
     textRDD.flatMap(_.split(" ")).foreach(println)

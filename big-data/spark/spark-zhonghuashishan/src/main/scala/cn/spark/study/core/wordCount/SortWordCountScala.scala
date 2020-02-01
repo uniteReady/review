@@ -10,16 +10,16 @@ object SortWordCountScala {
 
     val sc = new SparkContext(conf)
 
-    val path : String = "E:\\WorkSpace\\IDEAWorkspace\\review\\big-data\\spark\\spark-zhonghuashishan\\src\\main\\resources\\hello.txt"
+    val path: String = "E:\\WorkSpace\\IDEAWorkspace\\review\\big-data\\spark\\spark-zhonghuashishan\\src\\main\\resources\\hello.txt"
     val linesRDD: RDD[String] = sc.textFile(path)
 
     linesRDD.flatMap(_.split(" "))
-      .map((_,1))
-      .reduceByKey(_+_)
-      .map(x => (x._2,x._1))
+      .map((_, 1))
+      .reduceByKey(_ + _)
+      .map(x => (x._2, x._1))
       .sortByKey(false)
-      .map(x =>(x._2,x._1))
-      .foreach(x => println( "word: "+ x._1 + "，count: "+ x._2))
+      .map(x => (x._2, x._1))
+      .foreach(x => println("word: " + x._1 + "，count: " + x._2))
 
     sc.stop()
   }

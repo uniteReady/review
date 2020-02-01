@@ -24,14 +24,14 @@ public class SecondarySort {
         JavaSparkContext sc = new JavaSparkContext(conf);
         String path = "E:\\WorkSpace\\IDEAWorkspace\\review\\big-data\\spark\\spark-zhonghuashishan\\src\\main\\resources\\sort.txt";
         JavaRDD<String> lineRDD = sc.textFile(path);
-        JavaPairRDD<SecondarySortKey,String> pairs = lineRDD.mapToPair(new PairFunction<String, SecondarySortKey, String>() {
+        JavaPairRDD<SecondarySortKey, String> pairs = lineRDD.mapToPair(new PairFunction<String, SecondarySortKey, String>() {
             @Override
             public Tuple2<SecondarySortKey, String> call(String s) throws Exception {
                 String[] splits = s.split(" ");
                 SecondarySortKey key = new SecondarySortKey();
                 key.setFirst(Integer.parseInt(splits[0]));
                 key.setSecond(Integer.parseInt(splits[1]));
-                return new Tuple2<>(key,s);
+                return new Tuple2<>(key, s);
             }
         });
 

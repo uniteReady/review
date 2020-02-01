@@ -4,8 +4,8 @@ object Test {
     untilTest()
   }
 
-  def untilTest(): Unit ={
-    for(x <- 4 to 0 by -1){
+  def untilTest(): Unit = {
+    for (x <- 4 to 0 by -1) {
       println(x)
     }
   }

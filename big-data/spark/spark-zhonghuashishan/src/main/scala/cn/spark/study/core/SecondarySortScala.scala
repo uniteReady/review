@@ -13,10 +13,10 @@ object SecondarySortScala {
     val path: String = "E:\\WorkSpace\\IDEAWorkspace\\review\\big-data\\spark\\spark-zhonghuashishan\\src\\main\\resources\\sort.txt"
     val lineRDD: RDD[String] = sc.textFile(path)
 
-    val pairRDD = lineRDD.map(x =>{
+    val pairRDD = lineRDD.map(x => {
       val splits: Array[String] = x.split(" ")
-      val key:SecondarySortKeyScala = new SecondarySortKeyScala(splits(0).toInt,splits(1).toInt)
-      (key,x)
+      val key: SecondarySortKeyScala = new SecondarySortKeyScala(splits(0).toInt, splits(1).toInt)
+      (key, x)
     })
 
     pairRDD.sortByKey().map(x => x._2).foreach(println)

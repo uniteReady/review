@@ -63,9 +63,8 @@ public class WordCountCluster {
 
 
         for (Tuple2<String, Integer> wordcount : wordCountRDD.collect()) {
-            System.out.println(wordcount._1+" appeared "+wordcount._2 + " times .");
+            System.out.println(wordcount._1 + " appeared " + wordcount._2 + " times .");
         }
-
 
 
     }

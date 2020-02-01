@@ -16,7 +16,7 @@ public class LineCount {
 
         JavaSparkContext sc = new JavaSparkContext(conf);
 
-        String path  = "F:\\tianyafu\\tianyafu_github\\review\\big-data\\spark\\spark-zhonghuashishan\\src\\main\\resources\\hello.txt";
+        String path = "F:\\tianyafu\\tianyafu_github\\review\\big-data\\spark\\spark-zhonghuashishan\\src\\main\\resources\\hello.txt";
 
         JavaRDD<String> lines = sc.textFile(path);
 
@@ -34,7 +34,7 @@ public class LineCount {
 
         resultRDD.foreach(new VoidFunction<Tuple2<String, Integer>>() {
             public void call(Tuple2<String, Integer> lineCount) throws Exception {
-                System.out.println(lineCount._1 + " appeared "+ lineCount._2 + " times.");
+                System.out.println(lineCount._1 + " appeared " + lineCount._2 + " times.");
             }
         });
 

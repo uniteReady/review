@@ -28,28 +28,28 @@ object GroupTopNScala {
 
         while (it.hasNext) {
           val score: Int = it.next()
-          breakable{
+          breakable {
             for (i <- (0 until topNArray.length)) {
-              if(topNArray(i) == null){
-                topNArray(i)=score
+              if (topNArray(i) == null) {
+                topNArray(i) = score
                 break()
-              }else if( score >= topNArray(i)){
-                for(j <- topNArray.length -1 until  i by -1){
-                  topNArray(j) = topNArray(j-1)
+              } else if (score >= topNArray(i)) {
+                for (j <- topNArray.length - 1 until i by -1) {
+                  topNArray(j) = topNArray(j - 1)
                 }
-                topNArray(i)= score
+                topNArray(i) = score
                 break()
               }
             }
+          }
         }
-        }
-        new Tuple2(className,topNArray)
+        new Tuple2(className, topNArray)
       }
     )
 
     resultRDD.foreach(
-      x =>{
-        println("className : "+ x._1)
+      x => {
+        println("className : " + x._1)
         x._2.foreach(println)
         println("=================")
       }
