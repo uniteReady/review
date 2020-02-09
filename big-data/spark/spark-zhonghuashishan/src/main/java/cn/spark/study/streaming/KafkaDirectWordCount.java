@@ -3,21 +3,15 @@ package cn.spark.study.streaming;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.spark.SparkConf;
-import org.apache.spark.api.java.JavaPairRDD;
-import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.function.FlatMapFunction;
 import org.apache.spark.api.java.function.Function2;
 import org.apache.spark.api.java.function.PairFunction;
-import org.apache.spark.api.java.function.VoidFunction2;
-import org.apache.spark.sql.SparkSession;
 import org.apache.spark.streaming.Durations;
-import org.apache.spark.streaming.Time;
 import org.apache.spark.streaming.api.java.JavaDStream;
 import org.apache.spark.streaming.api.java.JavaInputDStream;
 import org.apache.spark.streaming.api.java.JavaPairDStream;
 import org.apache.spark.streaming.api.java.JavaStreamingContext;
 import org.apache.spark.streaming.kafka010.ConsumerStrategies;
-import org.apache.spark.streaming.kafka010.ConsumerStrategy;
 import org.apache.spark.streaming.kafka010.KafkaUtils;
 import org.apache.spark.streaming.kafka010.LocationStrategies;
 import scala.Tuple2;
@@ -25,6 +19,7 @@ import scala.Tuple2;
 import java.util.*;
 
 /**
+ * http://spark.apache.org/docs/2.3.3/streaming-kafka-0-10-integration.html#storing-offsets
  * 基于Kafka Direct方式的word count 程序
  * <p>
  * After a context is defined, you have to do the following.
@@ -40,6 +35,8 @@ public class KafkaDirectWordCount {
     public static void main(String[] args) throws Exception {
         SparkConf conf = new SparkConf().setAppName("KafkaDirectWordCount").setMaster("local[2]");
         JavaStreamingContext jssc = new JavaStreamingContext(conf, Durations.seconds(10));
+
+
 
         //创建一份kafka参数map
         Map<String, Object> kafkaParams = new HashMap<>();
