@@ -1,7 +1,5 @@
 package cn.spark.study.streaming;
 
-import javafx.beans.property.ReadOnlyBooleanWrapper;
-import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.function.Function;
 import org.apache.spark.api.java.function.Function2;
@@ -27,7 +25,7 @@ import java.util.Arrays;
  */
 public class Top3HotProduct {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         SparkSession spark = SparkSession.builder().appName("Top3HotProduct").master("local[2]").getOrCreate();
         JavaStreamingContext jssc = new JavaStreamingContext(spark.sparkContext().getConf(), Durations.seconds(10));
 
