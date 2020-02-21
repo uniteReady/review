@@ -3,40 +3,41 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>big-data</artifactId>
+        <artifactId>spark</artifactId>
         <groupId>com.tianya</groupId>
         <version>1.0</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.tianya</groupId>
-    <artifactId>spark</artifactId>
+    <artifactId>spark-bussiness-data-analysis</artifactId>
     <version>1.0</version>
-    <modules>
-        <module>spark-zhonghuashishan</module>
-        <module>spark-atguigu</module>
-        <module>spark-bussiness-data-analysis-zhonghuashishan</module>
-    </modules>
-    <packaging>pom</packaging>
 
-    <!--<repositories>
-        <repository>
+    <repositories>
+        <!--<repository>
             <id>cdh.repo</id>
             <url>https://repository.cloudera.com/artifactory/cloudera-repos</url>
         </repository>
         <repository>
             <id>cdh.snapshots.repo</id>
             <url>https://repository.cloudera.com/artifactory/libs-snapshot-local</url>
-        </repository>
+        </repository>-->
         <repository>
             <id>aliyunmaven</id>
             <url>http://maven.aliyun.com/nexus/content/groups/public/</url>
         </repository>
-        <repository>
+
+        <!--<repository>
             <id>elastic.co</id>
             <url>https://artifacts.elastic.co/maven</url>
-        </repository>
-    </repositories>-->
+        </repository>-->
+    </repositories>
+    <pluginRepositories>
+        <pluginRepository>
+            <id>alimaven</id>
+            <url>https://maven.aliyun.com/repository/public</url>
+        </pluginRepository>
+    </pluginRepositories>
 
     <properties>
         <scala.binary.version>2.11</scala.binary.version>
@@ -59,29 +60,32 @@
 
     <dependencies>
 
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.12</version>
+        </dependency>
+
         <!--添加spark core 的依赖 http://spark.apache.org/docs/2.3.0/rdd-programming-guide.html-->
         <dependency>
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-core_${scala.binary.version}</artifactId>
             <version>${spark.version}</version>
         </dependency>
+
+        <!--添加访问hdfs的依赖 http://spark.apache.org/docs/2.3.0/rdd-programming-guide.html-->
+        <!--<dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-client</artifactId>
+            <version>${hadoop.version}</version>
+        </dependency>-->
+
+
         <!--添加spark sql 的依赖-->
         <dependency>
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-sql_${scala.binary.version}</artifactId>
             <version>${spark.version}</version>
-        </dependency>
-        <!--添加spark sql 的hive依赖-->
-        <dependency>
-            <groupId>org.apache.spark</groupId>
-            <artifactId>spark-hive_${scala.binary.version}</artifactId>
-            <version>${spark.version}</version>
-        </dependency>
-        <!--添加hive 的依赖-->
-        <dependency>
-            <groupId>org.apache.hive</groupId>
-            <artifactId>hive-exec</artifactId>
-            <version>${hive.version}</version>
         </dependency>
 
         <!--spark streaming 的依赖-->
@@ -108,6 +112,33 @@
             <artifactId>mysql-connector-java</artifactId>
             <version>${mysql.version}</version>
         </dependency>
+
+        <dependency>
+            <groupId>org.json</groupId>
+            <artifactId>json</artifactId>
+            <version>20090211</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-core</artifactId>
+            <version>2.9.9</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>2.9.9</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
+            <version>2.9.9</version>
+        </dependency>
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>fastjson</artifactId>
+            <version>1.2.58</version>
+        </dependency>
+
     </dependencies>
 
 
