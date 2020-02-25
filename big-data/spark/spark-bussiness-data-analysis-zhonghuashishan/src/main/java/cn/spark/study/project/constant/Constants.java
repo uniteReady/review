@@ -30,6 +30,8 @@ public interface Constants {
     String FIELD_VISIT_LENGTH = "visitLength";
     //访问步长
     String FIELD_STEP_LENGTH = "stepLength";
+    //session 开始时间
+    String FIELD_START_TIME = "startTime";
 
 
     String SESSION_COUNT = "session_count";

@@ -2,6 +2,8 @@ package cn.spark.study.project.dao.impl;
 
 
 import cn.spark.study.project.dao.ISessionAggrStatDAO;
+import cn.spark.study.project.dao.ISessionDetailDAO;
+import cn.spark.study.project.dao.ISessionRandomExtractDAO;
 import cn.spark.study.project.dao.ITaskDAO;
 
 /**
@@ -26,5 +28,9 @@ public class DAOFactory {
 	public static ISessionAggrStatDAO getSessionAggrStatDAO() {
 		return new SessionAggrStatDAOImpl();
 	}
+
+	public static ISessionRandomExtractDAO getSessionRandomExtractDAO(){return new SessionRandomExtractDAOImpl();}
+
+	public static ISessionDetailDAO getSessionDetailDAO(){return new SessionDetailDAOImpl();}
 	
 }
