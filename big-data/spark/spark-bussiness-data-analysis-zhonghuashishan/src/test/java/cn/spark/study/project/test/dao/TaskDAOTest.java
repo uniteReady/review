@@ -1,7 +1,7 @@
 package cn.spark.study.project.test.dao;
 
 import cn.spark.study.project.dao.ITaskDAO;
-import cn.spark.study.project.dao.impl.DAOFactory;
+import cn.spark.study.project.dao.factory.DAOFactory;
 import cn.spark.study.project.domain.Task;
 
 /**

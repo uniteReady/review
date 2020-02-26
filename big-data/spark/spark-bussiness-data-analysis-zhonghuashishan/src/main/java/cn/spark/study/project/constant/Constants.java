@@ -33,6 +33,15 @@ public interface Constants {
     //session 开始时间
     String FIELD_START_TIME = "startTime";
 
+    //品类点击次数
+    String FIELD_CATEGORY_ID = "categoryId";
+    String FIELD_CLICK_COUNT = "clickCount";
+    //品类的下单次数
+    String FIELD_ORDER_COUNT = "orderCount";
+
+    //品类的支付次数
+    String FIELD_PAY_COUNT = "payCount";
+
 
     String SESSION_COUNT = "session_count";
     String TIME_PERIOD_1s_3s = "1s_3s";

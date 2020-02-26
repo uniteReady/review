@@ -1,10 +1,8 @@
-package cn.spark.study.project.dao.impl;
+package cn.spark.study.project.dao.factory;
 
 
-import cn.spark.study.project.dao.ISessionAggrStatDAO;
-import cn.spark.study.project.dao.ISessionDetailDAO;
-import cn.spark.study.project.dao.ISessionRandomExtractDAO;
-import cn.spark.study.project.dao.ITaskDAO;
+import cn.spark.study.project.dao.*;
+import cn.spark.study.project.dao.impl.*;
 
 /**
  * DAO工厂类
@@ -32,5 +30,7 @@ public class DAOFactory {
 	public static ISessionRandomExtractDAO getSessionRandomExtractDAO(){return new SessionRandomExtractDAOImpl();}
 
 	public static ISessionDetailDAO getSessionDetailDAO(){return new SessionDetailDAOImpl();}
+
+	public static ITop10CategoryDAO getTop10CategoryDao(){return new Top10CategoryDAOImpl(); }
 	
 }
