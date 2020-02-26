@@ -42,8 +42,8 @@ CREATE TABLE `top10_category` (
   KEY `idx_task_id` (`task_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 comment '存储按点击、下单和支付排序出来的top10品类数据';
 
-drop table if exists  top10_category_session;
-CREATE TABLE `top10_category_session` (
+drop table if exists  top10_session;
+CREATE TABLE `top10_session` (
   `task_id` int(11) NOT NULL comment '任务id',
   `category_id` int(11) DEFAULT NULL comment '商品品类id',
   `session_id` varchar(255) DEFAULT NULL comment 'session的id',

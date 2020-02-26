@@ -1,11 +1,10 @@
-package cn.spark.study.project.spark;
+package cn.spark.study.project.spark.session;
 
 import cn.spark.study.project.conf.ConfigurationManager;
 import cn.spark.study.project.constant.Constants;
 import cn.spark.study.project.dao.*;
 import cn.spark.study.project.dao.factory.DAOFactory;
 import cn.spark.study.project.domain.*;
-import cn.spark.study.project.jdbc.JDBCHelper;
 import cn.spark.study.project.mock.MockData;
 import cn.spark.study.project.utils.*;
 import com.alibaba.fastjson.JSONObject;
@@ -85,6 +84,8 @@ public class UserVisitSessionAnalyzeSpark {
         // 相当于我们自己编写的算子，是要访问外面的任务参数对象的
         // 所以，大家记得我们之前说的，匿名内部类（算子函数），访问外部对象，是要给外部对象使用final修饰的
         JavaPairRDD<String, String> filteredSessionid2AggrInfoRDD = filterSessionAndAggrStat(sessionId2FullAggrInfoRDD, taskParam,sessionAggrStatAccumulator);
+        //获取通过筛选条件的session的访问明细数据RDD
+        JavaPairRDD<String, Row> sessionId2DetailRDD = getSessionId2DetailRDD(filteredSessionid2AggrInfoRDD, sessionIdActionRDD);
 
         /**
          * 对于Accumulator这种分布式累加计算的变量的使用，有一个重要说明
@@ -167,7 +168,11 @@ public class UserVisitSessionAnalyzeSpark {
          *
          */
 
-        getTop10Category(task.getTaskid(),filteredSessionid2AggrInfoRDD,sessionIdActionRDD);
+        //获取top10热门品类
+        List<Tuple2<CategorySortKey, String>> top10CategoryCountList = getTop10Category(task.getTaskid(), sessionId2DetailRDD);
+
+        //获取top10 活跃session
+        getTop10Session(jsc,task.getTaskid(),sessionId2DetailRDD,top10CategoryCountList);
 
 
 
@@ -177,21 +182,181 @@ public class UserVisitSessionAnalyzeSpark {
     }
 
     /**
-     * 获取top10 热门品类
+     * 获取top10 活跃session
+     * @param jsc  javaSparkContext
+     * @param taskid taskId
+     * @param sessionId2DetailRDD  JavaPairRDD<sessionId,访问明细></>
+     * @param top10CategoryCountList top10热门品类id的list
+     */
+    private static void getTop10Session(JavaSparkContext jsc,long taskid, JavaPairRDD<String, Row> sessionId2DetailRDD,List<Tuple2<CategorySortKey, String>> top10CategoryCountList) {
+
+        /**
+         * 第一步： 将top10 热门品类的id 生成一份RDD
+         */
+        List<Tuple2<String,String>> top10CategoryIdList = new ArrayList<>();
+        for (Tuple2<CategorySortKey, String> category : top10CategoryCountList) {
+            String categoryId = StringUtils.getFieldFromConcatString(category._2, "\\|", Constants.FIELD_CATEGORY_ID);
+            top10CategoryIdList.add(new Tuple2<>(categoryId,categoryId));
+        }
+        JavaPairRDD<String, String> top10CategoryIdRDD = jsc.parallelizePairs(top10CategoryIdList);
+        /**
+         * 第二步：计算top10品类被各个session点击的次数
+         */
+        JavaPairRDD<String, Iterable<Row>> sessionId2DetailsRDD = sessionId2DetailRDD.groupByKey();
+        JavaPairRDD<String, String> categoryId2SessionIdCountRDD = sessionId2DetailsRDD.flatMapToPair(new PairFlatMapFunction<Tuple2<String, Iterable<Row>>, String, String>() {
+            @Override
+            public Iterator<Tuple2<String, String>> call(Tuple2<String, Iterable<Row>> tuple) throws Exception {
+                String sessionId = tuple._1;
+                Iterator<Row> it = tuple._2.iterator();
+                Map<String, Long> categoryId2CountMap = new HashMap<>();
+                while (it.hasNext()) {
+                    Row row = it.next();
+                    String categoryId = row.getString(6);
+                    if (StringUtils.isNotEmpty(categoryId)) {
+                        Long count = categoryId2CountMap.get(categoryId);
+                        if (count == null) {
+                            count = 0L;
+                        }
+                        count++;
+                        categoryId2CountMap.put(categoryId, count);
+                    }
+                }
+                //返回结果： Tuple2<categoryId,  sessionId,count>
+                List<Tuple2<String, String>> resultList = new ArrayList<>();
+                for (Map.Entry<String, Long> entry : categoryId2CountMap.entrySet()) {
+                    String categoryId = entry.getKey();
+                    Long count = entry.getValue();
+                    String value = sessionId + "," + count;
+                    resultList.add(new Tuple2<>(categoryId, value));
+                }
+                return resultList.iterator();
+            }
+        });
+        //获取到top10热门品类 被各个session点击的次数  JavaPairRDD<categoryId, sessionId,Count>
+        JavaPairRDD<String,String> top10CategorySessionCountRDD = top10CategoryIdRDD.join(categoryId2SessionIdCountRDD).mapToPair(new PairFunction<Tuple2<String, Tuple2<String, String>>, String, String>() {
+            @Override
+            public Tuple2<String,String> call(Tuple2<String, Tuple2<String, String>> tuple) throws Exception {
+                return new Tuple2<>(tuple._1,tuple._2._2);
+            }
+        });
+
+        /**
+         * 第三步：分组取topN算法实现 获取每个品类的top10 活跃用户
+         */
+        JavaPairRDD<String, Iterable<String>> top10CategorySessionCountsRDD = (JavaPairRDD<String, Iterable<String>>) top10CategorySessionCountRDD.groupByKey();
+
+        JavaPairRDD<String, String> top10SessionRDD= top10CategorySessionCountsRDD.flatMapToPair(new PairFlatMapFunction<Tuple2<String, Iterable<String>>, String, String>() {
+            @Override
+            public Iterator<Tuple2<String, String>> call(Tuple2<String, Iterable<String>> tuple) throws Exception {
+                String categoryId = tuple._1;
+                Iterator<String> it = tuple._2.iterator();
+                // 定义取topn的排序数组
+                String[] top10Sessions = new String[10];
+                while (it.hasNext()) {
+                    String sessionCount = it.next();
+                    String[] splits = sessionCount.split(",");
+                    String sessionId = splits[0];
+                    Long count = Long.valueOf(splits[1]);
+                    // 遍历排序数组
+                    for (int i = 0; i < top10Sessions.length; i++) {
+                        // 如果当前i位，没有数据，那么直接将i位数据赋值为当前sessionCount
+                        if (top10Sessions[i] == null) {
+                            top10Sessions[i] = sessionCount;
+                            break;
+                        } else {
+                            Long _count = Long.valueOf(top10Sessions[i].split(",")[1]);
+                            // 如果sessionCount比i位的sessionCount要大
+                            if (count > _count) {
+                                for (int j = top10Sessions.length; j > i; j--) {
+                                    top10Sessions[j] = top10Sessions[j - 1];
+                                }
+                                // 将i位赋值为sessionCount
+                                top10Sessions[i] = sessionCount;
+                                break;
+                            }
+                            // 如果sessionCount比i位的sessionCount要小，继续外层for循环
+                        }
+                    }
+                }
+                //List<Tuple2<sessionId,sessionId>>
+                List<Tuple2<String,String>> resultList = new ArrayList<>();
+                ITop10SessionDAO top10SessionDAO = DAOFactory.getTop10SessionDAO();
+                for (String sessionCount : top10Sessions) {
+                    if(sessionCount !=null){
+                        String sessionId = sessionCount.split(",")[0];
+                        Long count = Long.valueOf(sessionCount.split(",")[1]);
+                        // 将数据写入MySQL表
+                        Top10Session top10Session = new Top10Session(taskid,categoryId,sessionId,count);
+                        top10SessionDAO.insert(top10Session);
+                        // 放入list
+                        resultList.add(new Tuple2<>(sessionId,sessionId));
+                    }
+                }
+
+                return resultList.iterator();
+            }
+        });
+
+        /**
+         * 第四步：获取top10活跃session的明细数据，并写入MySQL
+         */
+        JavaPairRDD<String, Tuple2<String, Row>> sessionDetailRDD = top10SessionRDD.join(sessionId2DetailRDD);
+        sessionDetailRDD.foreach(new VoidFunction<Tuple2<String,Tuple2<String,Row>>>() {
+
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public void call(Tuple2<String, Tuple2<String, Row>> tuple) throws Exception {
+                Row row = tuple._2._2;
+
+                SessionDetail sessionDetail = new SessionDetail();
+                sessionDetail.setTaskid(taskid);
+                sessionDetail.setUserid(row.getLong(1));
+                sessionDetail.setSessionid(row.getString(2));
+                sessionDetail.setPageid(row.getLong(3));
+                sessionDetail.setActionTime(row.getString(4));
+                sessionDetail.setSearchKeyword(row.getString(5));
+                sessionDetail.setClickCategoryId(row.getString(6));
+                sessionDetail.setClickProductId(row.getString(7));
+                sessionDetail.setOrderCategoryIds(row.getString(8));
+                sessionDetail.setOrderProductIds(row.getString(9));
+                sessionDetail.setPayCategoryIds(row.getString(10));
+                sessionDetail.setPayProductIds(row.getString(11));
+
+                ISessionDetailDAO sessionDetailDAO = DAOFactory.getSessionDetailDAO();
+                sessionDetailDAO.insert(sessionDetail);
+            }
+        });
+
+    }
+
+    /**
+     * 获取通过筛选条件的session的访问明细数据RDD
      * @param filteredSessionid2AggrInfoRDD
      * @param sessionIdActionRDD
+     * @return
      */
-    public static void getTop10Category(Long taskId,JavaPairRDD<String, String> filteredSessionid2AggrInfoRDD, JavaPairRDD<String, Row> sessionIdActionRDD) {
-        //获取符合条件的session的明细
+    public  static JavaPairRDD<String,Row> getSessionId2DetailRDD(JavaPairRDD<String, String> filteredSessionid2AggrInfoRDD, JavaPairRDD<String, Row> sessionIdActionRDD){
         JavaPairRDD<String, Row> sessionid2detailRDD = filteredSessionid2AggrInfoRDD.join(sessionIdActionRDD).mapToPair(new PairFunction<Tuple2<String, Tuple2<String, Row>>, String, Row>() {
             @Override
             public Tuple2<String, Row> call(Tuple2<String, Tuple2<String, Row>> tuple) throws Exception {
                 return new Tuple2<>(tuple._1, tuple._2._2);
             }
         });
+
+        return sessionid2detailRDD;
+    }
+
+
+    /**
+     * 获取top10 热门品类
+     * @param taskId
+     * @param sessionId2DetailRDD
+     */
+    public static List<Tuple2<CategorySortKey, String>> getTop10Category(Long taskId,JavaPairRDD<String, Row> sessionId2DetailRDD) {
          //获取符合条件的session访问过的所有品类id
         //访问过:指的是,点击过或者下单过或者支付过的都算访问过
-        JavaPairRDD<String, String> categoryIdRDD = sessionid2detailRDD.flatMapToPair(new PairFlatMapFunction<Tuple2<String, Row>, String, String>() {
+        JavaPairRDD<String, String> categoryIdRDD = sessionId2DetailRDD.flatMapToPair(new PairFlatMapFunction<Tuple2<String, Row>, String, String>() {
             @Override
             public Iterator<Tuple2<String, String>> call(Tuple2<String, Row> tuple) throws Exception {
                 Set<Tuple2<String, String>> resultset = new HashSet<>();
@@ -229,9 +394,9 @@ public class UserVisitSessionAnalyzeSpark {
         /**
          * 第二步:计算各品类的点击 下单和支付的次数
          */
-       JavaPairRDD<String,Long> clickCategoryId2CountRDD = getClickCategoryId2CountRDD(sessionid2detailRDD);
-       JavaPairRDD<String,Long> orderCategoryId2CountRDD = getorderCategoryId2CountRDD(sessionid2detailRDD);
-       JavaPairRDD<String,Long> payCategoryId2CountRDD = getpayCategoryId2CountRDD(sessionid2detailRDD);
+       JavaPairRDD<String,Long> clickCategoryId2CountRDD = getClickCategoryId2CountRDD(sessionId2DetailRDD);
+       JavaPairRDD<String,Long> orderCategoryId2CountRDD = getorderCategoryId2CountRDD(sessionId2DetailRDD);
+       JavaPairRDD<String,Long> payCategoryId2CountRDD = getpayCategoryId2CountRDD(sessionId2DetailRDD);
         /**
          * 第三步：join各品类与它的点击、下单和支付的次数
          *
@@ -283,6 +448,8 @@ public class UserVisitSessionAnalyzeSpark {
             Top10Category top10Category = new Top10Category(taskId,categoryId,clickCount,orderCount,payCount);
             top10CategoryDao.insert(top10Category);
         }
+
+        return top10CategoryCountList;
 
     }
 

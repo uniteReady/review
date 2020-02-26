@@ -1,4 +1,4 @@
-package cn.spark.study.project.spark;
+package cn.spark.study.project.spark.session;
 
 import cn.spark.study.project.constant.Constants;
 import cn.spark.study.project.utils.StringUtils;
