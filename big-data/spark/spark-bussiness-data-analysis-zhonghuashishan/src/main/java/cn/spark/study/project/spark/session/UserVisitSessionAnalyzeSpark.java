@@ -267,7 +267,7 @@ public class UserVisitSessionAnalyzeSpark {
                             Long _count = Long.valueOf(top10Sessions[i].split(",")[1]);
                             // 如果sessionCount比i位的sessionCount要大
                             if (count > _count) {
-                                for (int j = top10Sessions.length; j > i; j--) {
+                                for (int j = top10Sessions.length-1; j > i; j--) {
                                     top10Sessions[j] = top10Sessions[j - 1];
                                 }
                                 // 将i位赋值为sessionCount
