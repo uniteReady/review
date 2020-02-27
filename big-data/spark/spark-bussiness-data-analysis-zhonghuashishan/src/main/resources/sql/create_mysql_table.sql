@@ -82,3 +82,5 @@ CREATE TABLE `task` (
   PRIMARY KEY (`task_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 comment 'task表，用来存储J2EE平台插入其中的任务的信息';
 
+insert into task(task_id,task_name,task_param) values(1,'本地测试任务1','{"startDate":["2020-02-27"],"endDate":["2020-02-27"],"startAge":["23"],"endAge":["50"]}');
+
