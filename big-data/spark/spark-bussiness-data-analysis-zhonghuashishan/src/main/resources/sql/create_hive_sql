@@ -1,0 +1,25 @@
+create external table user_info(
+	user_id Bigint comment '每一个用户的唯一标识',
+	username string comment '每个用户的登录名',
+	name string comment '每个用户自己的昵称 ，或者是真实姓名',
+	age int comment '用户的年龄',
+	professional string comment '用户的职业',
+	city string comment '用户所在的城市',
+	sex string comment '用户的性别 '
+) row format delimited fields terminated by ',' location '/user/hive/warehouse/test.db/emp' comment '用户信息表';
+
+
+create external table user_visit_action(
+	date string comment '日期，代表这个用户点击行为是在哪一天发生的',
+	user_id Bigint comment '代表这个点击行为是哪一个用户执行的',
+	session_id string comment '唯一标识了某个用户的一个访问session',
+	page_id Bigint comment '点击了某些商品/品类，也可能是搜索了某个关键词，然后进入了某个页面，页面的id',
+	action_time string comment '这个点击行为发生的时间点',
+	search_keyword string comment '搜索的关键词',
+	click_category_id string comment '点击某个品类的品类id',
+	click_product_id string comment '点击某个商品的商品id',
+	order_category_ids string comment '订单中商品的品类ids',
+	order_product_ids string comment '订单中商品的ids',
+	pay_category_ids string comment '支付的订单中商品的品类的ids',
+	pay_product_ids string comment '支付的订单中商品的ids'
+) row format delimited fields terminated by ',' location '' comment '用户访问日志表';
