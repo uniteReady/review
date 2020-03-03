@@ -15,10 +15,13 @@ public interface Constants {
     String JDBC_USERNAME="jdbc.username";
     String JDBC_PASSWORD = "jdbc.password";
     String SPARK_LOCAL = "spark.local";
+    String SPARK_LOCAL_TASKID_SESSION = "spark.local.taskid.session";
+    String SPARK_LOCAL_TASKID_PAGE = "spark.local.taskid.page";
     /**
      * spark作业相关的常量
      */
     String SPARK_APP_NAME_SESSION="UserVisitSessionAnalyzeSpark";
+    String SPARK_APP_NAME_PAGE="PageOneStepConvertRateSpark";
     String FIELD_SESSION_ID = "sessionId";
     String FIELD_SEARCH_KEYWORDS = "searchKeywords";
     String FIELD_CLICK_CATEGORY_IDS = "clickCategoryIds";
@@ -90,5 +93,6 @@ public interface Constants {
     String PARAM_SEX = "sex";
     String PARAM_KEYWORDS= "keywords";
     String PARAM_CATEGORY_IDS= "categoryIds";
+    String PARAM_TARGET_PAGE_FLOW = "targetPageFlow";
 
 }

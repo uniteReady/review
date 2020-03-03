@@ -33,6 +33,16 @@ public class SparkUtils {
 			conf.setMaster("local");  
 		}  
 	}
+
+	public static SparkSession getSparkSession(SparkConf conf){
+		setMaster(conf);
+		SparkSession.Builder builder = SparkSession.builder().config(conf);
+		if (!ConfigurationManager.getBoolean(Constants.SPARK_LOCAL)) {
+			builder = builder.enableHiveSupport();
+		}
+		return builder.getOrCreate();
+
+	}
 	
 	/**
 	 * 获取SQLContext

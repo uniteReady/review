@@ -34,5 +34,7 @@ public class DAOFactory {
 	public static ITop10CategoryDAO getTop10CategoryDao(){return new Top10CategoryDAOImpl(); }
 
 	public static ITop10SessionDAO getTop10SessionDAO(){return new Top10SessionDAOImpl();}
+
+	public static IPageSplitConvertRateDAO getPageSplitConvertRateDAO(){return new PageSplitConvertRateDAOImpl();}
 	
 }

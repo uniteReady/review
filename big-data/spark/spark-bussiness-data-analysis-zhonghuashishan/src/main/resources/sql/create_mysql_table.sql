@@ -84,3 +84,11 @@ CREATE TABLE `task` (
 
 insert into task(task_id,task_name,task_param) values(1,'本地测试任务1','{"startDate":["2020-02-27"],"endDate":["2020-02-27"],"startAge":["23"],"endAge":["50"]}');
 
+----------------用户单跳率----------------
+CREATE TABLE page_split_convert_rate (
+	task_id INT COMMENT '任务id',
+	convert_rate VARCHAR (255) COMMENT '用户单跳转换率',
+	KEY `idx_task_id` (`task_id`),
+	KEY `idx_convert_rate` (`convert_rate`)
+) ENGINE = INNODB DEFAULT CHARSET=utf8 COMMENT '页面单跳转换率';
+insert into task(task_id,task_name,task_param) values(2,'本地测试任务2','{"startDate":["2020-03-03"],"endDate":["2020-03-03"],"targetPageFlow":["1,2,3,4,5,6,7,8,9"]}');

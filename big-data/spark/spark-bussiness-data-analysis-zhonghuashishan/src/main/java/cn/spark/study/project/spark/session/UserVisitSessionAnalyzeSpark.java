@@ -54,13 +54,13 @@ public class UserVisitSessionAnalyzeSpark {
 
     public static void main(String[] args) {
 
-        args = new String[]{"1"};
         //获取sparkSession
-        SparkSession spark = getSparkSession();
+        SparkConf conf = new SparkConf()
+                .setAppName(Constants.SPARK_APP_NAME_SESSION);
+        SparkSession spark = SparkUtils.getSparkSession(conf);
 
         //获取JavaSparkContext
         JavaSparkContext jsc = JavaSparkContext.fromSparkContext(spark.sparkContext());
-        SparkConf conf = jsc.getConf();
         /**
          * 启用kryo序列化机制 并注册相应的类
          */
@@ -70,12 +70,12 @@ public class UserVisitSessionAnalyzeSpark {
         mockData(jsc, spark);
 
         //获取task的信息
-        Long taskId = ParamUtils.getTaskIdFromArgs(args);
+        Long taskId = ParamUtils.getTaskIdFromArgs(args,Constants.SPARK_LOCAL_TASKID_SESSION);
         ITaskDAO taskDAO = DAOFactory.getTaskDAO();
         Task task = taskDAO.findById(taskId);
         JSONObject taskParam = JSONObject.parseObject(task.getTaskParam());
         //如果要进行Session粒度的数据聚合 首先要从user_visit_action表中查询出指定日期范围的行为数据
-        JavaRDD<Row> actionRDD = getActionRDDByDateRange(spark, taskParam);
+        JavaRDD<Row> actionRDD = SparkUtils.getActionRDDByDateRange(spark, taskParam);
 
         /**
          * 映射成<session_id,row> 这种键值对类型的RDD
@@ -1215,27 +1215,29 @@ public class UserVisitSessionAnalyzeSpark {
      * @param taskParam 任务的参数
      * @return
      */
-    public static JavaRDD<Row> getActionRDDByDateRange(SparkSession spark, JSONObject taskParam) {
+    /*public static JavaRDD<Row> getActionRDDByDateRange(SparkSession spark, JSONObject taskParam) {
         String startDate = ParamUtils.getParam(taskParam, Constants.PARAM_START_DATE);
         String endDate = ParamUtils.getParam(taskParam, Constants.PARAM_END_DATE);
         String sql = "select * from user_visit_action where date >= '" + startDate + "' and date <= '" + endDate + "'";
         Dataset<Row> actionDS = spark.sql(sql);
         return actionDS.javaRDD();
-    }
+    }*/
 
     /**
      * 获取SparkSession
      *
      * @return
      */
-    public static SparkSession getSparkSession() {
-        SparkSession.Builder builder = SparkSession.builder().appName(Constants.SPARK_APP_NAME_SESSION).master("local");
+    /*public static SparkSession getSparkSession(SparkConf conf) {
+        *//*SparkSession.Builder builder = SparkSession.builder().appName(Constants.SPARK_APP_NAME_SESSION).master("local");
         //如果不是本地模式  我们让他开启hive支持
         if (!ConfigurationManager.getBoolean(Constants.SPARK_LOCAL)) {
             builder = builder.enableHiveSupport();
-        }
+        }*//*
+        SparkUtils.setMaster(conf);
+        SparkSession.Builder builder = SparkSession.builder().config(conf);
         return builder.getOrCreate();
-    }
+    }*/
 
     /**
      * 生成模拟数据，只有在本地模式下才去生成数据
