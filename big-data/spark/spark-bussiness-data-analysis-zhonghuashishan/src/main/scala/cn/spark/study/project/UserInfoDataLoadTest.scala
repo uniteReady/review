@@ -10,8 +10,13 @@ object UserInfoDataLoadTest {
   def main(args: Array[String]): Unit = {
     val spark: SparkSession = SparkSession
       .builder()
-      .appName("UserInfoDataLoadTest").enableHiveSupport().getOrCreate()
-    val path = "hdfs://dse:8020/tmp/tianyafu/user_info.txt"
+//      .master("spark://master:7077")
+      .appName("UserInfoDataLoadTest")
+      .enableHiveSupport()
+      .getOrCreate()
+//    val path = "hdfs://dse:8020/tmp/tianyafu/user_info.txt"
+    val path = "hdfs://master:9000/tmp/tianyafu/user_info.txt"
+//    val path = "E:\\WorkSpace\\IDEAWorkspace\\review\\big-data\\spark\\spark-bussiness-data-analysis-zhonghuashishan\\src\\main\\resources\\data\\user_info.txt"
     val user_info_str: Dataset[String] = spark.read.textFile(path)
     val user_info_row:RDD[Row] = user_info_str.rdd.map(row =>{
       val splits: Array[String] = row.split("\\|")

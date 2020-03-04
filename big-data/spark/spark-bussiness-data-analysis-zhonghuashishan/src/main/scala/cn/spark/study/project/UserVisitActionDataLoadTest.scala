@@ -10,7 +10,8 @@ object UserVisitActionDataLoadTest {
     val spark: SparkSession = SparkSession
       .builder()
       .appName("UserVisitActionDataLoadTest").enableHiveSupport().getOrCreate()
-    val path = "hdfs://dse:8020/tmp/tianyafu/user_visit_action.txt"
+//    val path = "hdfs://dse:8020/tmp/tianyafu/user_visit_action.txt"
+    val path = "hdfs://master:9000/tmp/tianyafu/user_visit_action.txt"
     val user_visit_action_str: Dataset[String] = spark.read.textFile(path)
     val user_visit_action_row:RDD[Row] = user_visit_action_str.rdd.map(row =>{
       val splits: Array[String] = row.split("\\|")
