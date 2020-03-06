@@ -93,3 +93,25 @@ CREATE TABLE page_split_convert_rate (
 
 insert into task(task_id,task_name,task_param) values(1,'本地测试任务1','{"startDate":["2015-12-18"],"endDate":["2015-12-18"],"startAge":["23"],"endAge":["50"]}');
 insert into task(task_id,task_name,task_param) values(2,'本地测试任务2','{"startDate":["2015-12-18"],"endDate":["2015-12-18"],"targetPageFlow":["1,2,3,4,5,6,7,8,9"]}');
+
+----------------各区域热门商品top3统计----------------
+create table area_top3_product(
+	task_id int comment '任务id',
+	area varchar(50) comment '区域',
+	area_level varchar(50) comment '区域层级',
+	product_id int comment '商品id',
+	city_names varchar(255) comment '城市名字列表',
+	click_count int comment '点击次数',
+	product_name varchar(50) comment '商品名字',
+	product_status varchar(20) comment '商品状态',
+	KEY `idx_task_id` (`task_id`)
+)engine=innodb charset utf8 comment '各区域热门商品top3统计结果表';
+
+create table city_info(
+	city_id int comment '城市id',
+	city_name varchar(50) comment '城市名字',
+	area varchar(50) comment '区域',
+	KEY `idx_city_id` (`city_id`)
+)engine=innodb charset utf8 comment '城市信息表';
+
+insert  into `city_info`(`city_id`,`city_name`,`area`) values (0,'北京','华北'),(1,'上海','华东'),(2,'南京','华东'),(3,'广州','华南'),(4,'三亚','华南'),(5,'武汉','华中'),(6,'长沙','华中'),(7,'西安','西北'),(8,'成都','西南'),(9,'哈尔滨','东北');

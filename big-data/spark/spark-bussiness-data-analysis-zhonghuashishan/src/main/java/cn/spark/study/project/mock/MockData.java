@@ -74,7 +74,8 @@ public class MockData {
 							pageid, actionTime, searchKeyword,
 							clickCategoryId, clickProductId,
 							orderCategoryIds, orderProductIds,
-							payCategoryIds, payProductIds);
+							payCategoryIds, payProductIds,
+							Long.valueOf(String.valueOf(random.nextInt(10))));
 					rows.add(row);
 				}
 			}
@@ -94,7 +95,8 @@ public class MockData {
 				DataTypes.createStructField("order_category_ids", DataTypes.StringType, true),
 				DataTypes.createStructField("order_product_ids", DataTypes.StringType, true),
 				DataTypes.createStructField("pay_category_ids", DataTypes.StringType, true),
-				DataTypes.createStructField("pay_product_ids", DataTypes.StringType, true)));
+				DataTypes.createStructField("pay_product_ids", DataTypes.StringType, true),
+				DataTypes.createStructField("city_id", DataTypes.LongType, true)));
 
 //		DataFrame df = sqlContext.createDataFrame(rowsRDD, schema);
 		Dataset<Row> df = spark.createDataFrame(rowsRDD, schema);
