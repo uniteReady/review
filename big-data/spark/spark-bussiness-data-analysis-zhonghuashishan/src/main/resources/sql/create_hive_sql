@@ -1,6 +1,8 @@
 hdfs dfs -mkdir /tmp/tianyafu/user_info
 hdfs dfs -mkdir /tmp/tianyafu/user_visit_action
+hdfs dfs -mkdir /tmp/tianyafu/product_info
 
+--------------------用户信息表--------------------------
 drop table if exists user_info
 create external table user_info(
 	user_id Bigint comment '每一个用户的唯一标识',
@@ -10,10 +12,11 @@ create external table user_info(
 	professional string comment '用户的职业',
 	city string comment '用户所在的城市',
 	sex string comment '用户的性别 '
-) row format delimited fields terminated by '|'  location '/tmp/tianyafu/user_info' comment '用户信息表' ;
+) row format delimited fields terminated by '|'  location '/tmp/tianyafu/user_info' ;
 
 load data local inpath '/tmp/user_info.txt' into table user_info;
 
+--------------------用户访问日志表--------------------------
 drop table if exists user_visit_action
 create external table user_visit_action(
 	date string comment '日期，代表这个用户点击行为是在哪一天发生的',
@@ -27,5 +30,16 @@ create external table user_visit_action(
 	order_category_ids string comment '订单中商品的品类ids',
 	order_product_ids string comment '订单中商品的ids',
 	pay_category_ids string comment '支付的订单中商品的品类的ids',
-	pay_product_ids string comment '支付的订单中商品的ids'
-) row format delimited fields terminated by '|' location '/tmp/tianyafu/user_visit_action' comment '用户访问日志表';
+	pay_product_ids string comment '支付的订单中商品的ids',
+	city_id Bigint comment '城市id'
+) row format delimited fields terminated by '|' location '/tmp/tianyafu/user_visit_action';
+
+
+--------------------商品信息表--------------------------
+create external table product_info(
+	product_id bigint comment '商品id',
+	product_name string comment '商品name',
+	extend_info string comment '商品扩展信息'
+) row format delimited fields terminated by '|' location '/tmp/tianyafu/product_info';
+
+
