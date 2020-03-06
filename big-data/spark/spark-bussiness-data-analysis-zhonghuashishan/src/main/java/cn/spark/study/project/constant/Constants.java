@@ -1,5 +1,8 @@
 package cn.spark.study.project.constant;
 
+import org.apache.kafka.clients.CommonClientConfigs;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
+
 /**
  * 常量接口
  * 存放的是键值对中的key
@@ -18,6 +21,14 @@ public interface Constants {
     String SPARK_LOCAL_TASKID_SESSION = "spark.local.taskid.session";
     String SPARK_LOCAL_TASKID_PAGE = "spark.local.taskid.page";
     String SPARK_LOCAL_TASKID_PRODUCT = "spark.local.taskid.product";
+
+    String KAFKA_GROUP_ID = ConsumerConfig.GROUP_ID_CONFIG;
+    String KAFKA_AUTO_COMMIT = ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG;
+    String KAFKA_BOOTSTRAP_SERVERS = ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG;
+    String KAFKA_KEY_DESERIALIZER = ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG;
+    String KAFKA_VALUE_DESERIALIZER= ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG;
+    String KAFKA_AUTO_OFFSET_RESET = ConsumerConfig.AUTO_OFFSET_RESET_CONFIG;
+    String KAFKA_TOPIC = "topics";
     /**
      * spark作业相关的常量
      */

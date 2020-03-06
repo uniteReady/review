@@ -119,3 +119,40 @@ insert  into `city_info`(`city_id`,`city_name`,`area`) values (0,'北京','华�
 
 insert into task(task_id,task_name,task_param) values(3,'本地测试任务3','{"startDate":["2020-03-06"],"endDate":["2020-03-06"]}');
 update task set task_param = '{"startDate":["2015-12-20"],"endDate":["2015-12-20"]}' where task_id = 3; -- 线上环境测试时需要改到日期为2015-12-20
+
+
+
+----------------广告点击流量统计----------------
+
+CREATE TABLE `ad_user_click_count` (
+  `date` varchar(30) DEFAULT NULL comment '日期',
+  `user_id` int(11) DEFAULT NULL comment '用户id',
+  `ad_id` int(11) DEFAULT NULL comment '广告id',
+  `click_count` int(11) DEFAULT NULL comment '点击次数'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 comment '用户点击广告次数表';
+
+CREATE TABLE `ad_blacklist` (
+  `user_id` int(11) DEFAULT NULL comment '用户id'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 comment '黑名单表';
+
+CREATE TABLE `ad_stat` (
+  `date` varchar(30) DEFAULT NULL comment '日期',
+  `province` varchar(100) DEFAULT NULL comment '省份',
+  `city` varchar(100) DEFAULT NULL comment '城市',
+  `ad_id` int(11) DEFAULT NULL comment '广告id',
+  `click_count` int(11) DEFAULT NULL comment '点击次数'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 comment '统计每天每个省份每个城市对于某个广告的点击次数';
+
+CREATE TABLE `ad_province_top3` (
+  `date` varchar(30) DEFAULT NULL comment '日期',
+  `province` varchar(100) DEFAULT NULL comment '省份',
+  `ad_id` int(11) DEFAULT NULL comment '广告id',
+  `click_count` int(11) DEFAULT NULL comment '点击次数'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 comment '统计每天每个省份广告热门点击的top3';
+
+CREATE TABLE `ad_click_trend` (
+  `date` varchar(30) DEFAULT NULL comment '日期',
+  `ad_id` int(11) DEFAULT NULL comment '广告id',
+  `minute` varchar(30) DEFAULT NULL comment '分钟',
+  `click_count` int(11) DEFAULT NULL comment '点击次数'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 comment '广告点击趋势表';

@@ -38,5 +38,10 @@ public class DAOFactory {
 	public static IPageSplitConvertRateDAO getPageSplitConvertRateDAO(){return new PageSplitConvertRateDAOImpl();}
 
 	public static IAreaTop3ProductDAO getAreaTop3ProductDAO(){return new AreaTop3ProductDAOImpl();}
-	
+	public static IAdUserClickCountDAO getAdUserClickCountDAO(){return new AdUserClickCountDAOImpl();}
+	public static IAdStatDAO getAdStatDAO(){return new AdStatDAOImpl();}
+	public static IAdProvinceTop3DAO getAdProvinceTop3DAO(){return new AdProvinceTop3DAOImpl();}
+	public static IAdClickTrendDAO getAdClickTrendDAO(){return new AdClickTrendDAOImpl();}
+	public static IAdBlacklistDAO getAdBlacklistDAO(){return new AdBlacklistDAOImpl();}
+
 }
