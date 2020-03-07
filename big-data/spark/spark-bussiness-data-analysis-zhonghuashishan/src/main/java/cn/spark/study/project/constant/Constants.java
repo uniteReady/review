@@ -2,6 +2,7 @@ package cn.spark.study.project.constant;
 
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.producer.ProducerConfig;
 
 /**
  * 常量接口
@@ -22,13 +23,27 @@ public interface Constants {
     String SPARK_LOCAL_TASKID_PAGE = "spark.local.taskid.page";
     String SPARK_LOCAL_TASKID_PRODUCT = "spark.local.taskid.product";
 
+    /**
+     * kafka 通用的配置
+     */
+    String KAFKA_BOOTSTRAP_SERVERS = CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG;
+    String KAFKA_TOPIC = "topic";
+
+    /**
+     * kafka 生产者配置
+     */
+    String KAFKA_KEY_SERIALIZER = ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG;
+    String  KAFKA_VALUE_SERIALIZER = ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG;
+
+    /**
+     * kafka 消费者配置
+     */
     String KAFKA_GROUP_ID = ConsumerConfig.GROUP_ID_CONFIG;
     String KAFKA_AUTO_COMMIT = ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG;
-    String KAFKA_BOOTSTRAP_SERVERS = ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG;
     String KAFKA_KEY_DESERIALIZER = ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG;
     String KAFKA_VALUE_DESERIALIZER= ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG;
     String KAFKA_AUTO_OFFSET_RESET = ConsumerConfig.AUTO_OFFSET_RESET_CONFIG;
-    String KAFKA_TOPIC = "topics";
+
     /**
      * spark作业相关的常量
      */
