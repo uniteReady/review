@@ -12,10 +12,7 @@ import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
-import org.apache.spark.api.java.function.Function;
-import org.apache.spark.api.java.function.Function2;
-import org.apache.spark.api.java.function.PairFunction;
-import org.apache.spark.api.java.function.VoidFunction;
+import org.apache.spark.api.java.function.*;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.RowFactory;
@@ -36,12 +33,15 @@ import java.util.*;
 
 /**
  * 广告点击流量实时统计spark作业
- * @author Administrator
  *
+ * @author Administrator
  */
 public class AdClickRealTimeStatSpark {
 
-    public static void main(String[] args) throws Exception {
+    /**
+     * 一般的写法 不具有Driver高可用性
+     */
+   /* public static void main(String[] args) throws Exception {
         //创建spark streaming的上下文
         SparkConf conf = new SparkConf()
                 .setMaster("local[2]")
@@ -99,17 +99,90 @@ public class AdClickRealTimeStatSpark {
         jssc.awaitTermination();
 
         jssc.stop();
+    }*/
+
+
+    /**
+     * Driver高可用版
+     *
+     * @param args
+     * @throws Exception
+     */
+    public static void main(String[] args) throws Exception {
+        //创建spark streaming的上下文
+        SparkConf conf = new SparkConf()
+                .setMaster("local[2]")
+                .setAppName("AdClickRealTimeStatSpark");
+        SparkSession spark = SparkSession.builder().config(conf).getOrCreate();
+        //设置checkpoint目录
+        String checkPointPath = "hdfs://master:9000/tmp/tianyafu/checkpoint";
+
+        /**
+         * 这里为了做到容错，不使用new的方式来创建streamingContext对象，
+         * 而是通过工厂的方式JavaStreamingContext.getOrCreate()方式来创建，
+         *这种方式创建的好处是：在启动程序的时候回首先去检查点目录检查
+         * 如果有数据，就直接从数据中回复，如果没有数据，就直接new一个新的。
+         * 实验：一下代码实现了当driver正常运行的时候，宕机，
+         * 重启会自动从以前的checkpoint点拿取数据，重新计算。
+         */
+        Function0<JavaStreamingContext> contextFunction0 = new Function0<JavaStreamingContext>() {
+            @Override
+            public JavaStreamingContext call() throws Exception {
+                JavaStreamingContext jssc = new JavaStreamingContext(conf, Durations.seconds(5));
+                //切记，这里一定要写检查点
+                jssc.checkpoint(checkPointPath);
+                //创建一份kafka参数map
+                Map<String, Object> kafkaParams = new HashMap<>();
+                kafkaParams.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, ConfigurationManager.getProperty(Constants.KAFKA_BOOTSTRAP_SERVERS));
+                kafkaParams.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, ConfigurationManager.getProperty(Constants.KAFKA_KEY_DESERIALIZER));
+                kafkaParams.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ConfigurationManager.getProperty(Constants.KAFKA_VALUE_DESERIALIZER));
+                kafkaParams.put(ConsumerConfig.GROUP_ID_CONFIG, ConfigurationManager.getProperty(Constants.KAFKA_GROUP_ID));
+                kafkaParams.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, ConfigurationManager.getProperty(Constants.KAFKA_AUTO_OFFSET_RESET));
+                kafkaParams.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, ConfigurationManager.getBoolean(Constants.KAFKA_AUTO_COMMIT));
+                //配置kafka topic
+                String topics = ConfigurationManager.getProperty(Constants.KAFKA_TOPIC);
+                String[] splits = topics.split(",");
+                List<String> topicList = Arrays.asList(splits);
+                // 基于kafka direct api模式，构建出了针对kafka集群中指定topic的输入DStream<val1,val2>
+                // 两个值，val1，val2；val1没有什么特殊的意义；val2中包含了kafka topic中的一条一条的实时日志数据
+                JavaInputDStream<ConsumerRecord<String, String>> adRealTimeLogDStream =
+                        KafkaUtils.createDirectStream(jssc, LocationStrategies.PreferConsistent(), ConsumerStrategies.Subscribe(topicList, kafkaParams));
+                //日志格式：timestamp province city userid adid
+                // 某个时间点 某个省份 某个城市 某个用户 某个广告
+
+                // 根据动态黑名单进行数据过滤
+                JavaDStream<ConsumerRecord<String, String>> filteredAdRealTimeLogDStream = filterByBlacklist(adRealTimeLogDStream);
+                //生成动态黑名单
+                generateDynamicBlacklist(filteredAdRealTimeLogDStream);
+                // 业务功能一：计算广告点击流量实时统计结果（yyyyMMdd_province_city_adid,clickCount）
+                // 最粗
+                JavaPairDStream<String, Long> adRealTimeStatDStream = calculateRealTimeStat(filteredAdRealTimeLogDStream);
+                // 业务功能二：实时统计每天每个省份top3热门广告
+                // 统计的稍微细一些了
+                calculateProvinceTop3Ad(spark, adRealTimeStatDStream);
+                // 业务功能三：实时统计每天每个广告在最近1小时的滑动窗口内的点击趋势（每分钟的点击量）
+                // 统计的非常细了
+                // 我们每次都可以看到每个广告，最近一小时内，每分钟的点击量
+                // 每支广告的点击趋势
+                calculateAdClickCountByWindow(adRealTimeLogDStream);
+
+                return jssc;
+            }
+        };
+        JavaStreamingContext jssc = JavaStreamingContext.getOrCreate(checkPointPath, contextFunction0);
+        //启动spark streaming并等待任务执行结束并关闭
+        jssc.start();
+        jssc.awaitTermination();
+        jssc.stop();
     }
-
-
-
 
 
     /**
      * 计算最近1小时滑动窗口内的广告点击趋势
+     *
      * @param adRealTimeLogDStream
      */
-    private static void calculateAdClickCountByWindow(JavaInputDStream<ConsumerRecord<String, String>> adRealTimeLogDStream){
+    private static void calculateAdClickCountByWindow(JavaInputDStream<ConsumerRecord<String, String>> adRealTimeLogDStream) {
         // 映射成<yyyyMMddHHMM_adid,1L>格式
         JavaPairDStream<String, Long> pairDStream = adRealTimeLogDStream.mapToPair(new PairFunction<ConsumerRecord<String, String>, String, Long>() {
             @Override
@@ -147,7 +220,7 @@ public class AdClickRealTimeStatSpark {
                     public void call(Iterator<Tuple2<String, Long>> iterator) throws Exception {
                         List<AdClickTrend> adClickTrends = new ArrayList<AdClickTrend>();
 
-                        while(iterator.hasNext()) {
+                        while (iterator.hasNext()) {
                             Tuple2<String, Long> tuple = iterator.next();
                             String[] keySplited = tuple._1.split("_");
                             // yyyyMMddHHmm
@@ -181,9 +254,10 @@ public class AdClickRealTimeStatSpark {
 
     /**
      * 计算每天各省份的top3热门广告
+     *
      * @param adRealTimeStatDStream
      */
-    private static void calculateProvinceTop3Ad(SparkSession spark,JavaPairDStream<String, Long> adRealTimeStatDStream){
+    private static void calculateProvinceTop3Ad(SparkSession spark, JavaPairDStream<String, Long> adRealTimeStatDStream) {
 
         JavaDStream<Row> rowsDStream = adRealTimeStatDStream.transform(new Function<JavaPairRDD<String, Long>, JavaRDD<Row>>() {
             @Override
@@ -263,13 +337,13 @@ public class AdClickRealTimeStatSpark {
                     @Override
                     public void call(Iterator<Row> iterator) throws Exception {
                         List<AdProvinceTop3> adProvinceTop3s = new ArrayList<>();
-                        while (iterator.hasNext()){
+                        while (iterator.hasNext()) {
                             Row row = iterator.next();
                             String date = row.getString(0);
                             String province = row.getString(1);
                             long adId = row.getLong(2);
                             long clickCount = row.getLong(3);
-                            adProvinceTop3s.add(new AdProvinceTop3(date,province,adId,clickCount));
+                            adProvinceTop3s.add(new AdProvinceTop3(date, province, adId, clickCount));
                         }
                         IAdProvinceTop3DAO adProvinceTop3DAO = DAOFactory.getAdProvinceTop3DAO();
                         adProvinceTop3DAO.updateBatch(adProvinceTop3s);
@@ -283,10 +357,11 @@ public class AdClickRealTimeStatSpark {
 
     /**
      * 计算广告点击流量实时统计
+     *
      * @param filteredAdRealTimeLogDStream
      * @return
      */
-    public static JavaPairDStream<String, Long>  calculateRealTimeStat (JavaDStream<ConsumerRecord<String, String>> filteredAdRealTimeLogDStream){
+    public static JavaPairDStream<String, Long> calculateRealTimeStat(JavaDStream<ConsumerRecord<String, String>> filteredAdRealTimeLogDStream) {
         // 业务逻辑一
         // 广告点击流量实时统计
         // 上面的黑名单实际上是广告类的实时系统中，比较常见的一种基础的应用
@@ -344,7 +419,7 @@ public class AdClickRealTimeStatSpark {
 
                 Long clickCount = 0L;
                 // 如果说，之前是存在这个状态的，那么就以之前的状态作为起点，进行值的累加
-                if(optional.isPresent()){
+                if (optional.isPresent()) {
                     clickCount = optional.get();
                 }
                 // values，代表了，batch rdd中，每个key对应的所有的值
@@ -362,7 +437,7 @@ public class AdClickRealTimeStatSpark {
                     @Override
                     public void call(Iterator<Tuple2<String, Long>> iterator) throws Exception {
                         List<AdStat> adStats = new ArrayList<>();
-                        while (iterator.hasNext()){
+                        while (iterator.hasNext()) {
                             Tuple2<String, Long> tuple = iterator.next();
                             Long clickCount = tuple._2;
                             String[] splits = tuple._1.split("_");
@@ -370,7 +445,7 @@ public class AdClickRealTimeStatSpark {
                             String province = splits[1];
                             String city = splits[3];
                             Long adId = Long.valueOf(splits[4]);
-                            AdStat adStat = new AdStat(date,province,city,adId,clickCount);
+                            AdStat adStat = new AdStat(date, province, city, adId, clickCount);
                             adStats.add(adStat);
                         }
                         IAdStatDAO adStatDAO = DAOFactory.getAdStatDAO();
@@ -388,9 +463,10 @@ public class AdClickRealTimeStatSpark {
 
     /**
      * 生成动态黑名单
+     *
      * @param filteredAdRealTimeLogDStream
      */
-    public static void generateDynamicBlacklist(JavaDStream<ConsumerRecord<String, String>> filteredAdRealTimeLogDStream){
+    public static void generateDynamicBlacklist(JavaDStream<ConsumerRecord<String, String>> filteredAdRealTimeLogDStream) {
         //计算出每5秒一个batch中 每天每个用户每个广告的点击量
         JavaPairDStream<String, Long> dailyUserAdClickDStream = filteredAdRealTimeLogDStream.mapToPair(new PairFunction<ConsumerRecord<String, String>, String, Long>() {
             @Override
@@ -426,7 +502,7 @@ public class AdClickRealTimeStatSpark {
                     @Override
                     public void call(Iterator<Tuple2<String, Long>> iterator) throws Exception {
                         List<AdUserClickCount> adUserClickCounts = new ArrayList<>();
-                        while (iterator.hasNext()){
+                        while (iterator.hasNext()) {
                             Tuple2<String, Long> tuple = iterator.next();
                             String[] splits = tuple._1.split("_");
                             String date = splits[0];
@@ -435,7 +511,7 @@ public class AdClickRealTimeStatSpark {
                             Long userid = Long.valueOf(splits[1]);
                             Long adid = Long.valueOf(splits[2]);
                             Long count = tuple._2;
-                            adUserClickCounts.add(new AdUserClickCount(date,userid,adid,count));
+                            adUserClickCounts.add(new AdUserClickCount(date, userid, adid, count));
                         }
                         IAdUserClickCountDAO adUserClickCountDAO = DAOFactory.getAdUserClickCountDAO();
                         adUserClickCountDAO.updateBatch(adUserClickCounts);
@@ -472,7 +548,7 @@ public class AdClickRealTimeStatSpark {
                 int clickCount = adUserClickCountDAO.findClickCountByMultiKey(date, userid, adid);
                 // 判断，如果点击量大于等于100，ok，那么不好意思，你就是黑名单用户
                 // 那么就拉入黑名单，返回true
-                if(clickCount >= 100) {
+                if (clickCount >= 100) {
                     return true;
                 }
                 // 反之，如果点击量小于100的，那么就暂时不要管它了
@@ -530,7 +606,7 @@ public class AdClickRealTimeStatSpark {
                     public void call(Iterator<Long> iterator) throws Exception {
                         List<AdBlacklist> adBlacklists = new ArrayList<AdBlacklist>();
 
-                        while(iterator.hasNext()) {
+                        while (iterator.hasNext()) {
                             long userid = iterator.next();
 
                             AdBlacklist adBlacklist = new AdBlacklist();
@@ -581,9 +657,9 @@ public class AdClickRealTimeStatSpark {
     }
 
 
-
     /**
      * 根据黑名单进行过滤
+     *
      * @param adRealTimeLogDStream
      * @return
      */
