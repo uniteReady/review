@@ -1,5 +1,6 @@
 package cn.spark.study.project.spark
 
+import cn.spark.study.project.utils.ContextUtils
 import org.apache.spark.sql.{RelationalGroupedDataset, SparkSession}
 import org.apache.spark.sql.functions._
 
@@ -14,7 +15,7 @@ object UserActiveDegreeAnalyze {
     val startDate = "2016-09-01"
     val endDate = "2016-11-01"
 
-    val spark = SparkSession.builder().master("local").appName("UserActiveDegreeAnalyze").getOrCreate()
+    val spark = ContextUtils.getSparkSession(this.getClass.getSimpleName,false)
 
     import  spark.implicits._;
 

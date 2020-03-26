@@ -12,7 +12,7 @@ create external table user_info(
 	professional string comment '用户的职业',
 	city string comment '用户所在的城市',
 	sex string comment '用户的性别 '
-) row format delimited fields terminated by '|'  location '/tmp/tianyafu/user_info' ;
+) comment '用户信息表' row format delimited fields terminated by '|'  location '/tmp/tianyafu/user_info' ;
 
 load data local inpath '/tmp/user_info.txt' into table user_info;
 
@@ -32,7 +32,7 @@ create external table user_visit_action(
 	pay_category_ids string comment '支付的订单中商品的品类的ids',
 	pay_product_ids string comment '支付的订单中商品的ids',
 	city_id Bigint comment '城市id'
-) row format delimited fields terminated by '|' location '/tmp/tianyafu/user_visit_action';
+) comment '用户访问日志表' row format delimited fields terminated by '|' location '/tmp/tianyafu/user_visit_action';
 
 
 --------------------商品信息表--------------------------
@@ -40,6 +40,6 @@ create external table product_info(
 	product_id bigint comment '商品id',
 	product_name string comment '商品name',
 	extend_info string comment '商品扩展信息'
-) row format delimited fields terminated by '|' location '/tmp/tianyafu/product_info';
+) comment '商品信息表' row format delimited fields terminated by '|' location '/tmp/tianyafu/product_info';
 
 
