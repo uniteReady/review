@@ -13,6 +13,7 @@
     <packaging>pom</packaging>
     <modules>
         <module>data-warehouse-modeling-guide</module>
+        <module>data-warehouse-ruozedata</module>
     </modules>
 
 
