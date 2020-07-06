@@ -1,0 +1,30 @@
+## 离线还是实时 都可以使用
+spark-submit \
+--name DSHS-0.3 \
+--class com.ruozedata.DSHS \
+--master yarn \
+--deploy-mode cluster \
+--driver-memory 4g \
+--executor-memory 4g \
+--executor-cores 2 \
+--num-executors 8 \
+--jars $(echo /opt/software/spark2.1.1/spark_on_yarn/libs/*.jar | tr ' ' ',') \
+--conf "spark.ui.showConsoleProgress=false" \
+--conf "spark.yarn.am.memory=1024m" \
+--conf "spark.yarn.am.memoryOverhead=1024m" \
+--conf "spark.yarn.driver.memoryOverhead=1024m" \
+--conf "spark.yarn.executor.memoryOverhead=1024m" \
+--conf "spark.yarn.am.extraJavaOptions=-XX:+UseG1GC -XX:MaxGCPauseMillis=300 -
+XX:InitiatingHeapOccupancyPercent=50 -XX:G1ReservePercent=20 -XX:+DisableExplicitGC -Dcdh.version=5.12.0" \
+--conf "spark.driver.extraJavaOptions=-XX:+UseG1GC -XX:MaxGCPauseMillis=300 -
+XX:InitiatingHeapOccupancyPercent=50 -XX:G1ReservePercent=20 -XX:+DisableExplicitGC -Dcdh.version=5.12.0" \
+--conf "spark.executor.extraJavaOptions=-XX:+UseG1GC -XX:MaxGCPauseMillis=300 -XX:InitiatingHeapOccupancyPercent=50 -XX:G1ReservePercent=20 -XX:+DisableExplicitGC -Dcdh.version=5.12.0" \
+--conf "spark.streaming.backpressure.enabled=true" \
+--conf "spark.streaming.kafka.maxRatePerPartition=1250" \
+--conf "spark.locality.wait=1s" \
+--conf "spark.shuffle.consolidateFiles=true" \
+--conf "spark.executor.heartbeatInterval=360000" \
+--conf "spark.network.timeout=420000" \
+--conf "spark.serializer=org.apache.spark.serializer.KryoSerializer" \
+--conf "spark.hadoop.fs.hdfs.impl.disable.cache=true" \
+/opt/software/spark2.1.1/spark_on_yarn/DSHS-0.3.jar
