@@ -13,6 +13,7 @@
         <module>git-study</module>
         <module>java-study</module>
         <module>data-warehouse-study</module>
+        <module>ruozeg9</module>
     </modules>
     <packaging>pom</packaging>
 

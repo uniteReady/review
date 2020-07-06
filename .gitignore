@@ -26,3 +26,7 @@ hs_err_pid*
 /*.iml
 /*/*.iml
 /*/*/*.iml
+/*/*/*/*.iml
+/*/target/
+/*/*/target/
+/*/*/*/target/
