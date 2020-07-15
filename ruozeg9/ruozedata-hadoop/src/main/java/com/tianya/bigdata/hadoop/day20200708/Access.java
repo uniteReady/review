@@ -12,14 +12,14 @@ import java.io.IOException;
 public class Access implements Writable {
 
     private String phone;
-    private Long up;
-    private Long down;
-    private Long sum;
+    private long up;
+    private long down;
+    private long sum;
 
     public Access() {
     }
 
-    public Access(String phone, Long up, Long down) {
+    public Access(String phone, long up, long down) {
         this.phone = phone;
         this.up = up;
         this.down = down;
@@ -51,10 +51,10 @@ public class Access implements Writable {
      */
     @Override
     public void readFields(DataInput in) throws IOException {
-        String phone = in.readUTF();
-        long up = in.readLong();
-        long down = in.readLong();
-        long sum = in.readLong();
+        this.phone = in.readUTF();
+        this.up = in.readLong();
+        this.down = in.readLong();
+        this.sum = in.readLong();
     }
 
     public String getPhone() {
@@ -65,37 +65,33 @@ public class Access implements Writable {
         this.phone = phone;
     }
 
-    public Long getUp() {
+    public long getUp() {
         return up;
     }
 
-    public void setUp(Long up) {
+    public void setUp(long up) {
         this.up = up;
     }
 
-    public Long getDown() {
+    public long getDown() {
         return down;
     }
 
-    public void setDown(Long down) {
+    public void setDown(long down) {
         this.down = down;
     }
 
-    public Long getSum() {
+    public long getSum() {
         return sum;
     }
 
-    public void setSum(Long sum) {
+    public void setSum(long sum) {
         this.sum = sum;
     }
 
+
     @Override
     public String toString() {
-        return "Access{" +
-                "phone='" + phone + '\'' +
-                ", up=" + up +
-                ", down=" + down +
-                ", sum=" + sum +
-                '}';
+        return phone + "\t"+up+ "\t"+down+ "\t"+sum+ "\t";
     }
 }
