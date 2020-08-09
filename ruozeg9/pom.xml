@@ -17,6 +17,7 @@
         <module>ruozedata-homework</module>
         <module>ruoze-hadoop</module>
         <module>ruoze-scala</module>
+        <module>ruoze-hadoop-project</module>
     </modules>
 
     <name>ruoze-g9</name>
