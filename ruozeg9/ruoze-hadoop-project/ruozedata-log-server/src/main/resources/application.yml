@@ -1,0 +1,7 @@
+server:
+  servlet:
+    context-path: /log
+  port: 9527
+logging:
+  pattern:
+    console: "%d{HH:mm:ss} - %msg%n"
