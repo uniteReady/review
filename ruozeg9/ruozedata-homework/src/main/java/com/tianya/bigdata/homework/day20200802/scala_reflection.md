@@ -163,6 +163,18 @@ scala> val p = Purchase("Jeff Lebowski", 23819, false)
 p: Purchase = Purchase(Jeff Lebowski,23819,false)
 
 通常，我们可以通过使用适当的调用程序镜像来访问运行时的成员的类型
+
+In this example, we will attempt to get and set the shipped field of Purchase p, reflectively
+scala> import scala.reflect.runtime.{universe => ru}
+import scala.reflect.runtime.{universe=>ru}
+
+scala> val m = ru.runtimeMirror(p.getClass.getClassLoader)
+m: scala.reflect.runtime.universe.Mirror = JavaMirror with ...
+
+在这个案例中，我们试图去获取和设置Purchase p 的字段
+As we did in the previous example, we’ll begin by obtaining a mirror m, 
+which makes all classes and types available that are loaded by the classloader that also loaded the class of p (Purchase), 
+which we need in order to access member shipped
 ```
 
 
