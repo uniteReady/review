@@ -39,3 +39,26 @@ ip string comment 'ip地址'
 
 hdfs dfs -put /home/hadoop/data/order_info.txt /ruozedata/hive/order_info
 ```
+
+```
+
+select name,order_time,money,ip,
+lag(order_time,1,null) over(partition by name order by order_time) as previous_time, -- 用户购买明细及上次的购买时间
+lead(order_time,1,null) over(partition by name order by order_time) as next_time, -- 用户购买明细及下次的购买时间
+first_value(order_time,true) over(partition by name,from_unixtime(to_unix_timestamp(order_time,'yyyy-MM-dd'),'yyyy-MM') order by order_time)  as month_first_time, -- 用户购买明细及本月第一次购买的时间
+first_value(order_time,true) over(partition by name,from_unixtime(to_unix_timestamp(order_time,'yyyy-MM-dd'),'yyyy-MM') order by order_time desc)  as month_last_time, -- 用户购买明细及本月最后一次购买的时间
+sum(money) over(partition by name,from_unixtime(to_unix_timestamp(order_time,'yyyy-MM-dd'),'yyyy-MM')) as month_total_money, -- 用户购买明细及每月总额
+sum(money) over(partition by name order by order_time ) as daliy_sum_money, -- 用户购买明细及金额按日期累加
+sum(money) over(partition by name order by order_time ROWS BETWEEN 2 PRECEDING AND CURRENT ROW) sum1, -- 用户购买明细及最近三次的总额(当前行与前2行)
+sum(money) over(partition by name order by order_time ROWS BETWEEN 1 PRECEDING AND 1 FOLLOWING) sum2, -- 用户购买明细及最近三次的总额(当前行与前后各1行)
+sum(money) over(partition by name order by order_time ROWS BETWEEN CURRENT ROW AND 2 FOLLOWING) sum3 -- 用户购买明细及最近三次的总额(当前行与后2行)
+ from ruozedata.order_info order by name,order_time ;
+
+
+-- 查询前30%时间的订单信息
+ select name,order_time,money,ip,order_time_percent 
+ from 
+(select name,order_time,money,ip,
+round(CUME_DIST() over(order by order_time ),2) as order_time_percent
+ from ruozedata.order_info ) t where t.order_time_percent <=0.3 ;
+```
