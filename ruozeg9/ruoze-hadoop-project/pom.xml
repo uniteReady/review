@@ -13,6 +13,7 @@
     <packaging>pom</packaging>
     <modules>
         <module>zuozedata-log</module>
+        <module>ruozedata-log-server</module>
     </modules>
 
     <properties>

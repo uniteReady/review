@@ -8,7 +8,7 @@ import java.util.Date;
 
 public class MockData {
 
-    public String URL = "http://localhost:9527/log/upload";
+    public String URL = "http://hadoop:6789/log/upload";
 
     @Test
     public void  testUpload() throws InterruptedException {
