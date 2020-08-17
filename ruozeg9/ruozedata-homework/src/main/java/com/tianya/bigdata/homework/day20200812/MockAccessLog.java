@@ -5,6 +5,10 @@ import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.OutputStreamWriter;
 import java.net.URI;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -31,7 +35,7 @@ public class MockAccessLog {
 
     public static void main(String[] args) throws Exception {
         //判断参数个数
-        if (args.length != 3) {
+        /*if (args.length != 3) {
             System.out.println("| Usage: hadoop jar mainClass filePath hdfsUri hdfsUser");
             return;
         }
@@ -48,8 +52,8 @@ public class MockAccessLog {
 
         delete(conf, args[0]);
 
-        FSDataOutputStream fsDataOutputStream = fileSystem.create(new Path(args[0]));
-//        BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(new File("out/access.log"))));
+        FSDataOutputStream fsDataOutputStream = fileSystem.create(new Path(args[0]));*/
+        BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(new File("out/access.log"))));
 
         int counter = 0;
         for (int i = 0; i < 904000; i++) {
@@ -58,11 +62,9 @@ public class MockAccessLog {
             String ipStr = MockIpStr(); //随机生成IP
             String agentIp = "-"; //随机生成代理IP
             Integer responseTime = mockIntegerData(); //随机生成响应时间
-            String referer = "\"-\""; //随机生成referer
+            String referer = "-"; //随机生成referer
             String method = mockMethod();
             String url = mockUrl();
-
-            String methodUrl = "\"" + method + " " + url + "\"";
             Integer httpCode = mockHttpCode();
             Integer requestSize = mockIntegerData();
             String responseSize = "";
@@ -74,26 +76,26 @@ public class MockAccessLog {
                 responseSize = mockIntegerData() + "";
             }
             String cacheStatus = mockcacheStatus();
-            String UAHead = "\"" + "Mozilla/5.0（compatible; AhrefsBot/5.0; +http://ahrefs.com/robot/）" + "\"";
-            String type = "\"" + "text/html" + "\"";
+            String UAHead = "Mozilla/5.0（compatible; AhrefsBot/5.0; +http://ahrefs.com/robot/）";
+            String type = "text/html";
             sj.add(dateStr)
                     .add(ipStr)
                     .add(agentIp)
                     .add(responseTime + "")
                     .add(referer)
-                    .add(methodUrl)
+                    .add(method)
+                    .add(url)
                     .add(httpCode + "")
                     .add(requestSize + "")
                     .add(responseSize)
                     .add(cacheStatus).add(UAHead).add(type);
-            fsDataOutputStream.write(sj.toString().getBytes("UTF-8"));
-            fsDataOutputStream.write("\n".getBytes("UTF-8"));
+            writer.write(sj.toString());
+            writer.write("\n");
 
         }
 
-        fsDataOutputStream.flush();
-        fsDataOutputStream.close();
-        fileSystem.close();
+        writer.flush();
+        writer.close();
 
     }
 
@@ -219,12 +221,12 @@ public class MockAccessLog {
 
 
     public static String mockDateStr() {
-        Date date = randomDate("2019-01-01", "2019-01-31");
+        Date date = randomDate("2019-01-01", "2019-01-02");
         return "[" + FORMAT.format(date) + "]";
     }
 
 
-    private static Date randomDate(String beginDate, String endDate) {
+    public static Date randomDate(String beginDate, String endDate) {
         try {
             SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
             Date start = format.parse(beginDate);

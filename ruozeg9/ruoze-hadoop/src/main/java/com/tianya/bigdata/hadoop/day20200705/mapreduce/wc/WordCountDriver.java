@@ -13,7 +13,7 @@ public class WordCountDriver {
 
     public static void main(String[] args) throws Exception {
 
-        String in = "ruozeg9/ruozedata-hadoop/data/ruozedata.txt";
+        String in = "ruozeg9/ruoze-hadoop/data/ruozedata.txt";
         String out = "out";
         //创建一个Job
         Configuration conf = new Configuration();

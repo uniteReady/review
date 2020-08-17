@@ -4,6 +4,21 @@
 
 ## 梳理Hadoop中常用的端口号以及对应的配置参数名称
 ```$xslt
+常用的
+50070 dfs.namenode.http-address         namenode web ui 的ip 和 port
+50090 dfs.namenode.secondary.http-address       secondaryNameNode的http ip 和 port
+50075 dfs.datanode.http.address         datanode http server的ip 和 port
+50010 dfs.datanode.address              dataNode之间数据传输的ip 和 port
+8480  dfs.journalnode.http-address      journalnode http server的ip 和 port
+8020/9000 fs.defaultFS                  filesystem的ip 和 port
+8032 yarn.resourcemanager.address       resourcemanager中的application manager的 port
+8030 yarn.resourcemanager.scheduler.address    resourcemanager中的scheduler 的 port 
+8088 yarn.resourcemanager.webapp.address       resourcemanager中的web ui 的 port
+19888 mapreduce.jobhistory.webapp.address      MapReduce JobHistory Server Web UI host:port 
+```
+
+```$xslt
+全部的
 org.apache.hadoop:hadoop-hdfs:2.6.0-cdh5.16.2 hdfs-default.xml
 dfs.namenode.secondary.http-address 0.0.0.0:50090 secondaryNameNode的http ip 和 port
 dfs.namenode.secondary.https-address 0.0.0.0:50091 secondaryNameNode的https ip 和 port

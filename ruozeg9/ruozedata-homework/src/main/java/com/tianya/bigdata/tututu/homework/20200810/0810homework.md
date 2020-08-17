@@ -1,4 +1,4 @@
-# 建表
+# 用hive实现cities的图片功能
 ```$xslt
 hdfs dfs -mkdir -p /ruozedata/hive/address
 create external table ruozedata.address(
@@ -9,7 +9,7 @@ parentId int comment '父id'
 hdfs dfs -put /home/hadoop/data/address.txt /ruozedata/hive/address
 
 
--- 答案
+-- 自连接方式
 select a.name first_level,b.name second_level,c.name third_level from 
 address a join address b on a.id = b.parentid join address c on b.id = c.parentid where a.parentid = 0;
 
