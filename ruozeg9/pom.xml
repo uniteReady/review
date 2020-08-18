@@ -18,6 +18,7 @@
         <module>ruoze-hadoop</module>
         <module>ruoze-scala</module>
         <module>ruoze-hadoop-project</module>
+        <module>ruoze-zk</module>
     </modules>
 
     <name>ruoze-g9</name>
@@ -32,6 +33,8 @@
         <hive.version>1.1.0-cdh5.16.2</hive.version>
         <spark.version>2.4.5</spark.version>
         <flume.version>1.6.0-cdh5.16.2</flume.version>
+        <zookeeper.version>3.4.5-cdh5.16.2</zookeeper.version>
+        <curator.version>4.0.0</curator.version>
     </properties>
 
     <repositories>
@@ -100,6 +103,24 @@
                     <artifactId>slf4j-log4j12</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.zookeeper</groupId>
+            <artifactId>zookeeper</artifactId>
+            <version>${zookeeper.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.curator</groupId>
+            <artifactId>curator-framework</artifactId>
+            <version>${curator.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.curator</groupId>
+            <artifactId>curator-recipes</artifactId>
+            <version>${curator.version}</version>
         </dependency>
 
     </dependencies>
