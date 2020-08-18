@@ -15,6 +15,8 @@ import org.apache.hadoop.mapreduce.lib.db.DBConfiguration;
 import org.apache.hadoop.mapreduce.lib.db.DBInputFormat;
 import org.apache.hadoop.mapreduce.lib.db.DBOutputFormat;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.jobcontrol.ControlledJob;
+import org.apache.hadoop.mapreduce.lib.jobcontrol.JobControl;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
@@ -26,6 +28,8 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -35,6 +39,8 @@ import java.util.Locale;
 public class ETLDriver02 extends Configured implements Tool {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
+    private static JobInfos jobInfos = null;
 
     /**
      * 有2个参数，输入路径和输出路径
@@ -71,10 +77,10 @@ public class ETLDriver02 extends Configured implements Tool {
         job.setMapOutputValueClass(NullWritable.class);
         //设置Map 的类
         job.setMapperClass(MyMapper.class);
-        boolean flag = job.waitForCompletion(true);
+//        boolean flag = job.waitForCompletion(true);
         CounterGroup etlCounterGroup = job.getCounters().getGroup("etl");
         Iterator<Counter> iterator = etlCounterGroup.iterator();
-        JobInfos jobInfos = new JobInfos();
+        jobInfos = new JobInfos();
         while (iterator.hasNext()) {
             Counter counter = iterator.next();
             System.out.println(counter.getName() + "==>" + counter.getValue());
@@ -95,8 +101,9 @@ public class ETLDriver02 extends Configured implements Tool {
         long end = System.currentTimeMillis();
         jobInfos.setRunTime(Integer.valueOf((end-start)+""));
         jobInfos.setDay(day);
+        jobInfos.setTaskName("access日志");
 
-        conf.set("job.infos",jobInfos.toString());
+        conf.set("job_infos",jobInfos.toString());
 
         DBConfiguration.configureDB(conf,
                 "com.mysql.jdbc.Driver",
@@ -104,10 +111,67 @@ public class ETLDriver02 extends Configured implements Tool {
                 "root",
                 "root");
 
+        //获取job2
+        Job job2 = Job.getInstance(conf);
 
+        //设置主类
+        job2.setJarByClass(ETLDriver02.class);
 
-        return flag ? 1 : 0;
+        //设置map和reduce的类
+        job2.setMapperClass(MyMapper2.class);
+
+        //设置map和reduce的输出的key value类型
+        job2.setMapOutputKeyClass(NullWritable.class);
+        job2.setMapOutputValueClass(JobInfos.class);
+
+        //设置输入输出路径
+        FileInputFormat.setInputPaths(job2,output);
+        DBOutputFormat.setOutput(job2,"job_infos","task_name","totals","formats","errors","run_times","run_day");
+
+        JobControl jobControl = new JobControl("MyGroup");
+        ControlledJob cjob1 = new ControlledJob(job.getConfiguration());
+        ControlledJob cjob2 = new ControlledJob(job2.getConfiguration());
+        cjob2.addDependingJob(cjob1);
+
+        jobControl.addJob(cjob1);
+        jobControl.addJob(cjob2);
+
+        new Thread(jobControl).start();
+        while(! jobControl.allFinished()){
+            Thread.sleep(100);
+        }
+        jobControl.stop();
+
+        return 0;
     }
+
+    public static class MyMapper2 extends Mapper<LongWritable, Text,NullWritable,JobInfos>{
+
+        @Override
+        protected void setup(Context context) throws IOException, InterruptedException {
+            super.setup(context);
+        }
+
+        @Override
+        protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
+            super.map(key, value, context);
+        }
+
+        @Override
+        protected void cleanup(Context context) throws IOException, InterruptedException {
+            String job_infos = context.getConfiguration().get("job_infos");
+            String[] splits = job_infos.split("\t");
+            JobInfos jobInfos = new JobInfos();
+            jobInfos.setTaskName(splits[0]);
+            jobInfos.setAccessTotals(Integer.valueOf(splits[1]));
+            jobInfos.setAccessFormats(Integer.valueOf(splits[2]));
+            jobInfos.setAccessErrors(Integer.valueOf(splits[3]));
+            jobInfos.setRunTime(Integer.valueOf(splits[4]));
+            jobInfos.setDay(splits[5]);
+            context.write(NullWritable.get(),jobInfos);
+        }
+    }
+
 
     public static class MyMapper extends Mapper<LongWritable, Text, Text, NullWritable> {
 
@@ -130,7 +194,6 @@ public class ETLDriver02 extends Configured implements Tool {
 
         @Override
         protected void cleanup(Context context) throws IOException, InterruptedException {
-
             super.cleanup(context);
         }
 
@@ -217,6 +280,24 @@ public class ETLDriver02 extends Configured implements Tool {
 
     public static void main(String[] args) throws Exception {
         int result = ToolRunner.run(new Configuration(), new ETLDriver02(), args);
+        /*Connection conn =null;
+        PreparedStatement statement = null;
+        try{
+            conn = JDBCUtils.getConnection();
+            String sql = "insert into job_infos(totals,formats,errors,run_times) values(?,?,?,?)";
+            statement = conn.prepareStatement(sql);
+            if(null != jobInfos){
+                statement.setInt(1,jobInfos.getAccessTotals());
+                statement.setInt(2,jobInfos.getAccessFormats());
+                statement.setInt(3,jobInfos.getAccessErrors());
+                statement.setInt(4,jobInfos.getRunTime());
+                statement.execute();
+            }
+        }catch (Exception e){
+            System.out.println(e.getMessage());
+        }finally {
+            JDBCUtils.close(conn,statement);
+        }*/
         System.exit(result);
 
 

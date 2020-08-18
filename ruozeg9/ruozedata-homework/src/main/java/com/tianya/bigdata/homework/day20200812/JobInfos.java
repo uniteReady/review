@@ -12,6 +12,8 @@ import java.sql.SQLException;
 
 public class JobInfos implements Writable, DBWritable {
 
+    private String TaskName;
+
     private Integer accessTotals;
 
     private Integer accessFormats;
@@ -24,6 +26,7 @@ public class JobInfos implements Writable, DBWritable {
 
     @Override
     public void write(DataOutput out) throws IOException {
+        out.writeUTF(TaskName);
         out.writeInt(accessTotals);
         out.writeInt(accessFormats);
         out.writeInt(accessErrors);
@@ -34,6 +37,7 @@ public class JobInfos implements Writable, DBWritable {
 
     @Override
     public void readFields(DataInput in) throws IOException {
+        this.TaskName = in.readUTF();
         this.accessTotals = in.readInt();
         this.accessFormats = in.readInt();
         this.accessErrors = in.readInt();
@@ -44,21 +48,23 @@ public class JobInfos implements Writable, DBWritable {
 
     @Override
     public void write(PreparedStatement statement) throws SQLException {
-        statement.setInt(1,this.accessTotals);
-        statement.setInt(2,this.accessFormats);
-        statement.setInt(3,this.accessErrors);
-        statement.setInt(4,this.runTime);
-        statement.setString(5,this.day);
+        statement.setString(1,this.TaskName);
+        statement.setInt(2,this.accessTotals);
+        statement.setInt(3,this.accessFormats);
+        statement.setInt(4,this.accessErrors);
+        statement.setInt(5,this.runTime);
+        statement.setString(6,this.day);
 
     }
 
     @Override
     public void readFields(ResultSet resultSet) throws SQLException {
-        this.accessTotals = resultSet.getInt(1);
-        this.accessFormats = resultSet.getInt(2);
-        this.accessErrors = resultSet.getInt(3);
-        this.runTime = resultSet.getInt(4);
-        this.day = resultSet.getString(5);
+        this.TaskName = resultSet.getString(1);
+        this.accessTotals = resultSet.getInt(2);
+        this.accessFormats = resultSet.getInt(3);
+        this.accessErrors = resultSet.getInt(4);
+        this.runTime = resultSet.getInt(5);
+        this.day = resultSet.getString(6);
 
     }
 
@@ -105,14 +111,22 @@ public class JobInfos implements Writable, DBWritable {
         this.day = day;
     }
 
+    public String getTaskName() {
+        return TaskName;
+    }
+
+    public void setTaskName(String taskName) {
+        TaskName = taskName;
+    }
+
+
     @Override
     public String toString() {
-        return "JobInfos{" +
-                "accessTotals=" + accessTotals +
-                ", accessFormats=" + accessFormats +
-                ", accessErrors=" + accessErrors +
-                ", runTime=" + runTime +
-                ", day='" + day + '\'' +
-                '}';
+        return TaskName + '\t' +
+                accessTotals + '\t' +
+                accessFormats + '\t' +
+                accessErrors + '\t' +
+                runTime + '\t' +
+                day ;
     }
 }
