@@ -42,7 +42,6 @@ public class ETLDriver02 extends Configured implements Tool {
     private static final Logger LOGGER = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
 
-
     /**
      * 有4个参数，输入路径和输出路径
      *
@@ -87,15 +86,15 @@ public class ETLDriver02 extends Configured implements Tool {
         while (iterator.hasNext()) {
             Counter counter = iterator.next();
             System.out.println(counter.getName() + "==>" + counter.getValue());
-            switch (counter.getName()){
+            switch (counter.getName()) {
                 case "access_totals":
-                    jobInfos.setAccessTotals(Integer.valueOf(counter.getValue()+""));
+                    jobInfos.setAccessTotals(Integer.valueOf(counter.getValue() + ""));
                     break;
                 case "access_formats":
-                    jobInfos.setAccessFormats(Integer.valueOf(counter.getValue()+""));
+                    jobInfos.setAccessFormats(Integer.valueOf(counter.getValue() + ""));
                     break;
                 case "access_error":
-                    jobInfos.setAccessErrors(Integer.valueOf(counter.getValue()+""));
+                    jobInfos.setAccessErrors(Integer.valueOf(counter.getValue() + ""));
                     break;
                 default:
                     break;
@@ -104,33 +103,33 @@ public class ETLDriver02 extends Configured implements Tool {
         long end = System.currentTimeMillis();
         String endTime = sdf.format(sdf.parse(sdf.format(end)));
         //毫秒值
-        jobInfos.setRunTime(Integer.valueOf((end-start)+""));
+        jobInfos.setRunTime(Integer.valueOf((end - start) + ""));
         jobInfos.setDay(day);
         jobInfos.setTaskName("access日志");
         jobInfos.setStartTime(startTime);
         jobInfos.setEndTime(endTime);
 
-        Connection conn =null;
+        Connection conn = null;
         PreparedStatement statement = null;
-        try{
+        try {
             conn = JDBCUtils.getConnection();
             String sql = "insert into job_infos(task_name,totals,formats,`errors`,run_times,`day`,start_time,end_time) values(?,?,?,?,?,?,?,?)";
             statement = conn.prepareStatement(sql);
-            if(null != jobInfos){
-                statement.setString(1,jobInfos.getTaskName());
-                statement.setInt(2,jobInfos.getAccessTotals());
-                statement.setInt(3,jobInfos.getAccessFormats());
-                statement.setInt(4,jobInfos.getAccessErrors());
-                statement.setInt(5,jobInfos.getRunTime());
-                statement.setString(6,jobInfos.getDay());
-                statement.setString(7,jobInfos.getStartTime());
-                statement.setString(8,jobInfos.getEndTime());
+            if (null != jobInfos) {
+                statement.setString(1, jobInfos.getTaskName());
+                statement.setInt(2, jobInfos.getAccessTotals());
+                statement.setInt(3, jobInfos.getAccessFormats());
+                statement.setInt(4, jobInfos.getAccessErrors());
+                statement.setInt(5, jobInfos.getRunTime());
+                statement.setString(6, jobInfos.getDay());
+                statement.setString(7, jobInfos.getStartTime());
+                statement.setString(8, jobInfos.getEndTime());
                 statement.executeUpdate();
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             System.out.println(e.getMessage());
-        }finally {
-            JDBCUtils.close(conn,statement);
+        } finally {
+            JDBCUtils.close(conn, statement);
         }
 
         return 0;
@@ -142,6 +141,9 @@ public class ETLDriver02 extends Configured implements Tool {
         public SimpleDateFormat FORMAT = null;
 
         DbSearcher searcher = null;
+        FSDataInputStream fsDataInputStream = null;
+        ByteArrayOutputStream byteArrayOutputStream = null;
+
 
         @Override
         protected void setup(Context context) throws IOException, InterruptedException {
@@ -149,9 +151,9 @@ public class ETLDriver02 extends Configured implements Tool {
             //读取HDFS上的ip2region.db文件
             FileSystem fileSystem = FileSystem.get(context.getConfiguration());
             String dbPath = "/ruozedata/dw/data/ip2region.db";
-            FSDataInputStream fsDataInputStream = fileSystem.open(new Path(dbPath), 2048);
-            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-            IOUtils.copyBytes(fsDataInputStream,byteArrayOutputStream,2048);
+            fsDataInputStream = fileSystem.open(new Path(dbPath), 2048);
+            byteArrayOutputStream = new ByteArrayOutputStream();
+            IOUtils.copyBytes(fsDataInputStream, byteArrayOutputStream, 2048);
             byte[] bytes = byteArrayOutputStream.toByteArray();
             DbConfig config = null;
             try {
@@ -164,14 +166,15 @@ public class ETLDriver02 extends Configured implements Tool {
 
         @Override
         protected void cleanup(Context context) throws IOException, InterruptedException {
-            super.cleanup(context);
+            IOUtils.closeStream(fsDataInputStream);
+            IOUtils.closeStream(byteArrayOutputStream);
         }
 
         @Override
         protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
             context.getCounter("etl", "access_totals").increment(1L);
             try {
-                Access access = LogParser.parseLog(searcher,value.toString());
+                Access access = LogParser.parseLog(searcher, value.toString());
                 context.getCounter("etl", "access_formats").increment(1L);
                 context.write(new Text(access.toString()), NullWritable.get());
             } catch (Exception e) {

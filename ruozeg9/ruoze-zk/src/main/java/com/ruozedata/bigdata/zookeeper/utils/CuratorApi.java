@@ -16,7 +16,7 @@ import java.util.List;
 public class CuratorApi {
 
     CuratorFramework client = null;
-    String zkQuorum = "hadoop01:2181";
+    String zkQuorum = "hadoop:2181";
     String nodePath = "/curator/ruoze";
     String nodePath1 = "/curator/ruoze/child1";
     String nodePath2 = "/curator/ruoze/child2";
@@ -39,7 +39,7 @@ public class CuratorApi {
         client.create().creatingParentsIfNeeded()
                 .withMode(CreateMode.PERSISTENT)
                 .withACL(ZooDefs.Ids.OPEN_ACL_UNSAFE)
-                .forPath(nodePath2,"curator-ruoze".getBytes());
+                .forPath(nodePath,"curator-ruoze".getBytes());
     }
 
     @Test
