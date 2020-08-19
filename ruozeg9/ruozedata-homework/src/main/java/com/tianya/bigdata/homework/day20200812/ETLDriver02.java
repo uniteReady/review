@@ -3,7 +3,10 @@ package com.tianya.bigdata.homework.day20200812;
 import com.tianya.bigdata.homework.day20200801.FileUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
+import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
@@ -11,12 +14,7 @@ import org.apache.hadoop.mapreduce.Counter;
 import org.apache.hadoop.mapreduce.CounterGroup;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
-import org.apache.hadoop.mapreduce.lib.db.DBConfiguration;
-import org.apache.hadoop.mapreduce.lib.db.DBInputFormat;
-import org.apache.hadoop.mapreduce.lib.db.DBOutputFormat;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
-import org.apache.hadoop.mapreduce.lib.jobcontrol.ControlledJob;
-import org.apache.hadoop.mapreduce.lib.jobcontrol.JobControl;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
@@ -24,6 +22,7 @@ import org.lionsoul.ip2region.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
@@ -31,6 +30,8 @@ import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Iterator;
@@ -40,10 +41,10 @@ public class ETLDriver02 extends Configured implements Tool {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
-    private static JobInfos jobInfos = null;
+
 
     /**
-     * 有2个参数，输入路径和输出路径
+     * 有4个参数，输入路径和输出路径
      *
      * @param args
      * @return
@@ -51,17 +52,19 @@ public class ETLDriver02 extends Configured implements Tool {
      */
     @Override
     public int run(String[] args) throws Exception {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         long start = System.currentTimeMillis();
-        if (args.length != 4) {
-            LOGGER.error("输入参数不正确，需要两个参数：input output，当前参数个数为:" + args.length);
+        String startTime = sdf.format(sdf.parse(sdf.format(start)));
+        if (args.length != 3) {
+            LOGGER.error("输入参数不正确，需要三个参数：input output day，当前参数个数为:" + args.length);
             for (int i = 0; i < args.length; i++) {
                 LOGGER.error("第" + i + "个参数为:" + args[i]);
             }
             System.exit(0);
         }
-        String input = args[1];
-        String output = args[2];
-        String day = args[3];
+        String input = args[0];
+        String output = args[1];
+        String day = args[2];
         Configuration conf = super.getConf();
         FileUtils.delete(conf, output);
         Job job = Job.getInstance(conf);
@@ -77,10 +80,10 @@ public class ETLDriver02 extends Configured implements Tool {
         job.setMapOutputValueClass(NullWritable.class);
         //设置Map 的类
         job.setMapperClass(MyMapper.class);
-//        boolean flag = job.waitForCompletion(true);
+        boolean flag = job.waitForCompletion(true);
         CounterGroup etlCounterGroup = job.getCounters().getGroup("etl");
         Iterator<Counter> iterator = etlCounterGroup.iterator();
-        jobInfos = new JobInfos();
+        JobInfos jobInfos = new JobInfos();
         while (iterator.hasNext()) {
             Counter counter = iterator.next();
             System.out.println(counter.getName() + "==>" + counter.getValue());
@@ -99,77 +102,38 @@ public class ETLDriver02 extends Configured implements Tool {
             }
         }
         long end = System.currentTimeMillis();
+        String endTime = sdf.format(sdf.parse(sdf.format(end)));
+        //毫秒值
         jobInfos.setRunTime(Integer.valueOf((end-start)+""));
         jobInfos.setDay(day);
         jobInfos.setTaskName("access日志");
+        jobInfos.setStartTime(startTime);
+        jobInfos.setEndTime(endTime);
 
-        conf.set("job_infos",jobInfos.toString());
-
-        DBConfiguration.configureDB(conf,
-                "com.mysql.jdbc.Driver",
-                "jdbc:mysql://hadoop01:3306/ruozedata",
-                "root",
-                "root");
-
-        //获取job2
-        Job job2 = Job.getInstance(conf);
-
-        //设置主类
-        job2.setJarByClass(ETLDriver02.class);
-
-        //设置map和reduce的类
-        job2.setMapperClass(MyMapper2.class);
-
-        //设置map和reduce的输出的key value类型
-        job2.setMapOutputKeyClass(NullWritable.class);
-        job2.setMapOutputValueClass(JobInfos.class);
-
-        //设置输入输出路径
-        FileInputFormat.setInputPaths(job2,output);
-        DBOutputFormat.setOutput(job2,"job_infos","task_name","totals","formats","errors","run_times","run_day");
-
-        JobControl jobControl = new JobControl("MyGroup");
-        ControlledJob cjob1 = new ControlledJob(job.getConfiguration());
-        ControlledJob cjob2 = new ControlledJob(job2.getConfiguration());
-        cjob2.addDependingJob(cjob1);
-
-        jobControl.addJob(cjob1);
-        jobControl.addJob(cjob2);
-
-        new Thread(jobControl).start();
-        while(! jobControl.allFinished()){
-            Thread.sleep(100);
+        Connection conn =null;
+        PreparedStatement statement = null;
+        try{
+            conn = JDBCUtils.getConnection();
+            String sql = "insert into job_infos(task_name,totals,formats,`errors`,run_times,`day`,start_time,end_time) values(?,?,?,?,?,?,?,?)";
+            statement = conn.prepareStatement(sql);
+            if(null != jobInfos){
+                statement.setString(1,jobInfos.getTaskName());
+                statement.setInt(2,jobInfos.getAccessTotals());
+                statement.setInt(3,jobInfos.getAccessFormats());
+                statement.setInt(4,jobInfos.getAccessErrors());
+                statement.setInt(5,jobInfos.getRunTime());
+                statement.setString(6,jobInfos.getDay());
+                statement.setString(7,jobInfos.getStartTime());
+                statement.setString(8,jobInfos.getEndTime());
+                statement.executeUpdate();
+            }
+        }catch (Exception e){
+            System.out.println(e.getMessage());
+        }finally {
+            JDBCUtils.close(conn,statement);
         }
-        jobControl.stop();
 
         return 0;
-    }
-
-    public static class MyMapper2 extends Mapper<LongWritable, Text,NullWritable,JobInfos>{
-
-        @Override
-        protected void setup(Context context) throws IOException, InterruptedException {
-            super.setup(context);
-        }
-
-        @Override
-        protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
-            super.map(key, value, context);
-        }
-
-        @Override
-        protected void cleanup(Context context) throws IOException, InterruptedException {
-            String job_infos = context.getConfiguration().get("job_infos");
-            String[] splits = job_infos.split("\t");
-            JobInfos jobInfos = new JobInfos();
-            jobInfos.setTaskName(splits[0]);
-            jobInfos.setAccessTotals(Integer.valueOf(splits[1]));
-            jobInfos.setAccessFormats(Integer.valueOf(splits[2]));
-            jobInfos.setAccessErrors(Integer.valueOf(splits[3]));
-            jobInfos.setRunTime(Integer.valueOf(splits[4]));
-            jobInfos.setDay(splits[5]);
-            context.write(NullWritable.get(),jobInfos);
-        }
     }
 
 
@@ -182,11 +146,17 @@ public class ETLDriver02 extends Configured implements Tool {
         @Override
         protected void setup(Context context) throws IOException, InterruptedException {
             FORMAT = new SimpleDateFormat("dd/MMM/yyyy:hh:mm:ss Z", Locale.US);
-            String dbPath = "/home/hadoop/app/ruozedata-dw/data/ip2region.db";
+            //读取HDFS上的ip2region.db文件
+            FileSystem fileSystem = FileSystem.get(context.getConfiguration());
+            String dbPath = "/ruozedata/dw/data/ip2region.db";
+            FSDataInputStream fsDataInputStream = fileSystem.open(new Path(dbPath), 2048);
+            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+            IOUtils.copyBytes(fsDataInputStream,byteArrayOutputStream,2048);
+            byte[] bytes = byteArrayOutputStream.toByteArray();
             DbConfig config = null;
             try {
                 config = new DbConfig();
-                searcher = new DbSearcher(config, dbPath);
+                searcher = new DbSearcher(config, bytes);
             } catch (DbMakerConfigException e) {
                 e.printStackTrace();
             }
@@ -201,73 +171,7 @@ public class ETLDriver02 extends Configured implements Tool {
         protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
             context.getCounter("etl", "access_totals").increment(1L);
             try {
-//                Access access = LogParser.parseLog(value.toString());
-                Access access = new Access();
-                String[] splits = value.toString().split("\t");
-                String time = splits[0];
-                time = time.substring(1, time.length() - 1);
-                Date date = FORMAT.parse(time);
-                Calendar calendar = Calendar.getInstance();
-                calendar.setTime(date);
-                String ip = splits[1];
-                String proxyIp = splits[2];
-                String responseTime = splits[3];
-                String referer = splits[4];
-                String method = splits[5];
-                String url = splits[6];
-                String httpCode = splits[7];
-                String requestSize = splits[8];
-                String responseSize = splits[9];
-                String cache = splits[10];
-                String uaHead = splits[11];
-                String type = splits[12];
-                access.setIp(ip);
-                access.setProxyIp(proxyIp);
-                access.setResponseTime(Long.parseLong(responseTime));
-                access.setReferer(referer);
-                access.setMethod(method);
-                access.setUrl(url);
-                access.setHttpCode(httpCode);
-                access.setRequestSize(Long.parseLong(requestSize));
-                access.setCache(cache);
-                access.setUaHead(uaHead);
-                access.setType(type);
-
-                Integer year = calendar.get(Calendar.YEAR);
-                Integer month = calendar.get(Calendar.MONTH) + 1;
-                Integer day = calendar.get(Calendar.DATE);
-                access.setYear(year + "");
-                access.setMonth(month < 10 ? "0" + month : month + "");
-                access.setDay(day < 10 ? "0" + day : day + "");
-
-                String ipInfo = IPUtils.getCityInfo(searcher, ip);
-                String[] ipInfos = ipInfo.split("\\|");
-
-                String province = ipInfos[2];
-                String city = ipInfos[3];
-                String isp = ipInfos[4];
-                access.setProvince(province);
-                access.setCity(city);
-                access.setIsp(isp);
-
-                String[] urlSplits = url.split("\\?");
-                String[] urlSplits2 = urlSplits[0].split(":");
-
-                String http = urlSplits2[0];
-                access.setHttp(http);
-                String urlSpliting = urlSplits2[1].substring(2);
-                String domain = urlSpliting;
-                String path = "";
-                if (urlSpliting.contains("/")) {
-                    domain = urlSpliting.substring(0, urlSpliting.indexOf("/"));
-                    path = urlSpliting.substring(urlSpliting.indexOf("/"));
-                }
-                access.setDomain(domain);
-
-                access.setPath(path);
-                String params = urlSplits.length == 2 ? urlSplits[1] : null;
-                access.setParams(params);
-                access.setResponseSize(Long.parseLong(responseSize));
+                Access access = LogParser.parseLog(searcher,value.toString());
                 context.getCounter("etl", "access_formats").increment(1L);
                 context.write(new Text(access.toString()), NullWritable.get());
             } catch (Exception e) {
@@ -280,24 +184,6 @@ public class ETLDriver02 extends Configured implements Tool {
 
     public static void main(String[] args) throws Exception {
         int result = ToolRunner.run(new Configuration(), new ETLDriver02(), args);
-        /*Connection conn =null;
-        PreparedStatement statement = null;
-        try{
-            conn = JDBCUtils.getConnection();
-            String sql = "insert into job_infos(totals,formats,errors,run_times) values(?,?,?,?)";
-            statement = conn.prepareStatement(sql);
-            if(null != jobInfos){
-                statement.setInt(1,jobInfos.getAccessTotals());
-                statement.setInt(2,jobInfos.getAccessFormats());
-                statement.setInt(3,jobInfos.getAccessErrors());
-                statement.setInt(4,jobInfos.getRunTime());
-                statement.execute();
-            }
-        }catch (Exception e){
-            System.out.println(e.getMessage());
-        }finally {
-            JDBCUtils.close(conn,statement);
-        }*/
         System.exit(result);
 
 

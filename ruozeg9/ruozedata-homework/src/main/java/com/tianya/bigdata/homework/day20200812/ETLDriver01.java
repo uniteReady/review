@@ -2,41 +2,60 @@ package com.tianya.bigdata.homework.day20200812;
 
 import com.tianya.bigdata.homework.day20200801.FileUtils;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.*;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
-import org.lionsoul.ip2region.DataBlock;
-import org.lionsoul.ip2region.DbConfig;
-import org.lionsoul.ip2region.DbSearcher;
-import org.lionsoul.ip2region.Util;
+import org.lionsoul.ip2region.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import scala.xml.Null;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.Iterator;
 import java.util.Locale;
-import java.util.StringJoiner;
 
 public class ETLDriver01 {
     private static final Logger LOGGER = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     public static class MyMapper extends Mapper<LongWritable, Text, Text, NullWritable> {
+        public SimpleDateFormat FORMAT = null;
+        DbSearcher searcher = null;
+
+        @Override
+        protected void setup(Context context) throws IOException, InterruptedException {
+            FORMAT = new SimpleDateFormat("dd/MMM/yyyy:hh:mm:ss Z", Locale.US);
+            //读取HDFS上的ip2region.db文件
+            FileSystem fileSystem = FileSystem.get(context.getConfiguration());
+            String dbPath = "/ruozedata/dw/data/ip2region.db";
+            FSDataInputStream fsDataInputStream = fileSystem.open(new Path(dbPath), 2048);
+            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+            IOUtils.copyBytes(fsDataInputStream,byteArrayOutputStream,2048);
+            byte[] bytes = byteArrayOutputStream.toByteArray();
+            DbConfig config = null;
+            try {
+                config = new DbConfig();
+                searcher = new DbSearcher(config, bytes);
+            } catch (DbMakerConfigException e) {
+                e.printStackTrace();
+            }
+        }
+
         @Override
         protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
             context.getCounter("etl", "access_totals").increment(1L);
             try {
-                Access access = LogParser.parseLog(value.toString());
+                Access access = LogParser.parseLog(searcher,value.toString());
                 if (null != access) {
                     context.write(new Text(access.toString()), NullWritable.get());
                     context.getCounter("etl", "access_formats").increment(1L);

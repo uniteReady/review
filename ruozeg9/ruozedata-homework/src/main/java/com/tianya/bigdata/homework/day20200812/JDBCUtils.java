@@ -7,7 +7,7 @@ public class JDBCUtils {
     // 可以把几个字符串定义成常量：用户名，密码，URL，驱动类
     private static final String USER = "root";
     private static final String PWD = "root";
-    private static final String URL = "jdbc:mysql://hadoop01:3306/ruozedata";
+    private static final String URL = "jdbc:mysql://hadoop:3306/ruozedata?autoReconnect=true&useUnicode=true&characterEncoding=UTF-8";
     private static final String DRIVER = "com.mysql.jdbc.Driver";
 
     /**

@@ -6,11 +6,12 @@ import org.apache.hadoop.mapreduce.lib.db.DBWritable;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-public class JobInfos implements Writable, DBWritable {
+public class JobInfos implements Serializable {
 
     private String TaskName;
 
@@ -24,49 +25,10 @@ public class JobInfos implements Writable, DBWritable {
 
     private String day;
 
-    @Override
-    public void write(DataOutput out) throws IOException {
-        out.writeUTF(TaskName);
-        out.writeInt(accessTotals);
-        out.writeInt(accessFormats);
-        out.writeInt(accessErrors);
-        out.writeInt(runTime);
-        out.writeUTF(day);
+    private String startTime;
 
-    }
+    private String endTime;
 
-    @Override
-    public void readFields(DataInput in) throws IOException {
-        this.TaskName = in.readUTF();
-        this.accessTotals = in.readInt();
-        this.accessFormats = in.readInt();
-        this.accessErrors = in.readInt();
-        this.runTime = in.readInt();
-        this.day = in.readUTF();
-
-    }
-
-    @Override
-    public void write(PreparedStatement statement) throws SQLException {
-        statement.setString(1,this.TaskName);
-        statement.setInt(2,this.accessTotals);
-        statement.setInt(3,this.accessFormats);
-        statement.setInt(4,this.accessErrors);
-        statement.setInt(5,this.runTime);
-        statement.setString(6,this.day);
-
-    }
-
-    @Override
-    public void readFields(ResultSet resultSet) throws SQLException {
-        this.TaskName = resultSet.getString(1);
-        this.accessTotals = resultSet.getInt(2);
-        this.accessFormats = resultSet.getInt(3);
-        this.accessErrors = resultSet.getInt(4);
-        this.runTime = resultSet.getInt(5);
-        this.day = resultSet.getString(6);
-
-    }
 
     public JobInfos() {
     }
@@ -119,14 +81,33 @@ public class JobInfos implements Writable, DBWritable {
         TaskName = taskName;
     }
 
+    public String getStartTime() {
+        return startTime;
+    }
+
+    public void setStartTime(String startTime) {
+        this.startTime = startTime;
+    }
+
+    public String getEndTime() {
+        return endTime;
+    }
+
+    public void setEndTime(String endTime) {
+        this.endTime = endTime;
+    }
 
     @Override
     public String toString() {
-        return TaskName + '\t' +
-                accessTotals + '\t' +
-                accessFormats + '\t' +
-                accessErrors + '\t' +
-                runTime + '\t' +
-                day ;
+        return "JobInfos{" +
+                "TaskName='" + TaskName + '\'' +
+                ", accessTotals=" + accessTotals +
+                ", accessFormats=" + accessFormats +
+                ", accessErrors=" + accessErrors +
+                ", runTime=" + runTime +
+                ", day='" + day + '\'' +
+                ", startTime='" + startTime + '\'' +
+                ", endTime='" + endTime + '\'' +
+                '}';
     }
 }

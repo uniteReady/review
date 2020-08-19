@@ -1,6 +1,5 @@
 package com.tianya.bigdata.homework.day20200812;
 
-import com.tianya.bigdata.homework.day20200801.ETLDriver;
 import org.lionsoul.ip2region.DataBlock;
 import org.lionsoul.ip2region.DbConfig;
 import org.lionsoul.ip2region.DbSearcher;
@@ -18,7 +17,7 @@ public class LogParser {
 
     public static final SimpleDateFormat FORMAT = new SimpleDateFormat("dd/MMM/yyyy:hh:mm:ss Z", Locale.US);
 
-    public static Access parseLog(String log) throws ParseException {
+    public static Access parseLog(DbSearcher searcher,String log) throws ParseException {
 //        String log = "[29/Jan/2019:01:51:04 +0800]\t61.236.169.40\t-\t3415\t-\tPOST\thttp://tianyafu0/video/av52167210?a=b&c=d\t404\t1472\t1009\tMISS\tMozilla/5.0（compatible; AhrefsBot/5.0; +http://ahrefs.com/robot/）\ttext/html";
 //        String log = "[29/Jan/2019:01:51:04 +0800]\t61.235.87.102\t-\t3415\t-\tPOST\thttp://tianyafu0/video/av52167210?a=b&c=d\t404\t1472\t1009\tMISS\tMozilla/5.0（compatible; AhrefsBot/5.0; +http://ahrefs.com/robot/）\ttext/html";
 
@@ -60,7 +59,7 @@ public class LogParser {
         access.setMonth(month < 10 ? "0" + month : month + "");
         access.setDay(day < 10 ? "0" + day : day + "");
 
-        String ipInfo = analizeIp(ip);
+        String ipInfo = IPUtils.getCityInfo(searcher, ip);
         String[] ipInfos = ipInfo.split("\\|");
 
         String province = ipInfos[2];
@@ -78,7 +77,7 @@ public class LogParser {
         String urlSpliting = urlSplits2[1].substring(2);
         String domain = urlSpliting;
         String path = "";
-        if(urlSpliting.contains("/")){
+        if (urlSpliting.contains("/")) {
             domain = urlSpliting.substring(0, urlSpliting.indexOf("/"));
             path = urlSpliting.substring(urlSpliting.indexOf("/"));
         }
@@ -87,19 +86,16 @@ public class LogParser {
         access.setPath(path);
         String params = urlSplits.length == 2 ? urlSplits[1] : null;
         access.setParams(params);
-        try {
-            access.setResponseSize(Long.parseLong(responseSize));
-        } catch (Exception e) {
-            return null;
-        }
+        access.setResponseSize(Long.parseLong(responseSize));
         return access;
+
 
     }
 
     public static void main(String[] args) throws ParseException {
-        String log = "[29/Jan/2019:01:51:04 +0800]\t61.236.169.40\t-\t3415\t-\tPOST\thttp://tianyafu0/video/av52167210?a=b&c=d\t404\t1472\t1009\tMISS\tMozilla/5.0（compatible; AhrefsBot/5.0; +http://ahrefs.com/robot/）\ttext/html";
+        /*String log = "[29/Jan/2019:01:51:04 +0800]\t61.236.169.40\t-\t3415\t-\tPOST\thttp://tianyafu0/video/av52167210?a=b&c=d\t404\t1472\t1009\tMISS\tMozilla/5.0（compatible; AhrefsBot/5.0; +http://ahrefs.com/robot/）\ttext/html";
         Access access = parseLog(log);
-        System.out.println(access);
+        System.out.println(access);*/
 
 
 
