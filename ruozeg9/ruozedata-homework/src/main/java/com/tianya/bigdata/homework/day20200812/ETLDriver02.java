@@ -22,28 +22,32 @@ import org.lionsoul.ip2region.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.text.SimpleDateFormat;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.Iterator;
 import java.util.Locale;
 
+/**
+ * 处理访问日志数据
+ * 需要配置环境变量
+ * export HADOOP_CLASSPATH=$HADOOP_CLASSPATH:$HIVE_HOME/lib/*:/home/hadoop/lib/*.jar:/home/hadoop/lib/mysql-connector-java-5.1.47.jar
+ * export LIBJARS=/home/hadoop/lib/ip2region-1.7.2.jar
+ *
+ * 要用到的ip2region.db需要放到HDFS路径上
+ *
+ *
+ */
 public class ETLDriver02 extends Configured implements Tool {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
 
     /**
-     * 有4个参数，输入路径和输出路径
+     * 有3个参数，输入路径和输出路径
      *
      * @param args
      * @return
@@ -138,12 +142,33 @@ public class ETLDriver02 extends Configured implements Tool {
 
     public static class MyMapper extends Mapper<LongWritable, Text, Text, NullWritable> {
 
+        public int bufferSize = 10240;
         public SimpleDateFormat FORMAT = null;
 
         DbSearcher searcher = null;
         FSDataInputStream fsDataInputStream = null;
         ByteArrayOutputStream byteArrayOutputStream = null;
 
+        /*@Override
+        protected void setup(Context context) throws IOException, InterruptedException {
+            FORMAT = new SimpleDateFormat("dd/MMM/yyyy:hh:mm:ss Z", Locale.US);
+            //读取Linux本地上的ip2region.db文件
+            *//*FileSystem fileSystem = FileSystem.get(context.getConfiguration());
+            String dbPath = "/ruozedata/dw/data/ip2region.db";
+            fsDataInputStream = fileSystem.open(new Path(dbPath), 2048);*//*
+            String dbLocalPath = "/home/hadoop/app/ruozedata-dw/data/ip2region.db";
+            FileInputStream filePartIn0 = new FileInputStream(new File(dbLocalPath));
+            byteArrayOutputStream = new ByteArrayOutputStream();
+            IOUtils.copyBytes(filePartIn0, byteArrayOutputStream, bufferSize);
+            byte[] bytes = byteArrayOutputStream.toByteArray();
+            DbConfig config = null;
+            try {
+                config = new DbConfig();
+                searcher = new DbSearcher(config, bytes);
+            } catch (DbMakerConfigException e) {
+                e.printStackTrace();
+            }
+        }*/
 
         @Override
         protected void setup(Context context) throws IOException, InterruptedException {
@@ -151,9 +176,9 @@ public class ETLDriver02 extends Configured implements Tool {
             //读取HDFS上的ip2region.db文件
             FileSystem fileSystem = FileSystem.get(context.getConfiguration());
             String dbPath = "/ruozedata/dw/data/ip2region.db";
-            fsDataInputStream = fileSystem.open(new Path(dbPath), 2048);
+            fsDataInputStream = fileSystem.open(new Path(dbPath), bufferSize);
             byteArrayOutputStream = new ByteArrayOutputStream();
-            IOUtils.copyBytes(fsDataInputStream, byteArrayOutputStream, 2048);
+            IOUtils.copyBytes(fsDataInputStream, byteArrayOutputStream, bufferSize);
             byte[] bytes = byteArrayOutputStream.toByteArray();
             DbConfig config = null;
             try {

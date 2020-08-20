@@ -24,7 +24,7 @@ start=$(date '+%F %R:%S')
 startTime=$(date +%R:%S)
 echo "开始ETL任务"$start
 
-hadoop jar ../lib/ruozedata-homework-1.0.jar com.tianya.bigdata.homework.day20200812.ETLDriver02 -libjars ${LIBJARS} /ruozedata/dw/raw/access/$time /ruozedata/dw/ods_tmp/access/$time $time
+hadoop jar ${PWD}/../lib/ruozedata-homework-1.0.jar com.tianya.bigdata.homework.day20200812.ETLDriver02 -libjars ${LIBJARS} /ruozedata/dw/raw/access/$time /ruozedata/dw/ods_tmp/access/$time $time
 
 #记录结束时间
 end=`date '+%F %R:%S'`
