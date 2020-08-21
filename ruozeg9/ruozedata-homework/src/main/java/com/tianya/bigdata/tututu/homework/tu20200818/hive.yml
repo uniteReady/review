@@ -1,0 +1,12 @@
+nodes:
+  - name: hive_job_test
+    type: hive
+    dependsOn:
+      - hadoopETL
+    config:
+      user.to.proxy: hadoop
+      hive.script: hive.hql
+  - name: hadoopETL
+    type: command
+    config:
+      command: sh /home/hadoop/app/ruozedata-dw/bin/etl.sh 20190101
