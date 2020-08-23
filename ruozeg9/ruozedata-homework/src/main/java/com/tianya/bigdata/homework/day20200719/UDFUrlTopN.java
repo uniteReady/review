@@ -7,8 +7,8 @@ import org.apache.hadoop.hive.ql.exec.UDF;
  * (1)、获取url中的questionId，求Top10
  * (2)、获取课程名称,如果是父子课程的，则用_将父子课程的课程号拼接起来,求Top10
  *
- *[hadoop@hadoop01 hadoop_tmp]$ hdfs dfs -mkdir /ruozedata/hive/question
- * [hadoop@hadoop01 hadoop_tmp]$ hdfs dfs -mkdir /ruozedata/hive/course
+ *[hadoop@hadoop01 hadoop_tmp]$ hdfs dfs -mkdir -p /ruozedata/hive/question
+ * [hadoop@hadoop01 hadoop_tmp]$ hdfs dfs -mkdir -p /ruozedata/hive/course
  *
  * create external table ruozedata.question(
  * question_url string comment '问答对url'
