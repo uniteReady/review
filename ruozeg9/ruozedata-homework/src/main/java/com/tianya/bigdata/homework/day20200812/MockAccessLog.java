@@ -133,7 +133,7 @@ public class MockAccessLog {
      */
     public static String mockUrl() {
         StringBuilder urlBuilder = new StringBuilder();
-        int random = RANDOM.nextInt(10);
+        int random = RANDOM.nextInt(1000);
         String protocolPrefix = "http://";
         String domain = "tianyafu";
         String path = "/video/av5216721";

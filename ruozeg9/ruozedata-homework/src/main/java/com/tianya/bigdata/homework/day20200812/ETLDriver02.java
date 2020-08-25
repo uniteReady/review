@@ -175,15 +175,15 @@ public class ETLDriver02 extends Configured implements Tool {
             FORMAT = new SimpleDateFormat("dd/MMM/yyyy:hh:mm:ss Z", Locale.US);
             //读取HDFS上的ip2region.db文件
             FileSystem fileSystem = FileSystem.get(context.getConfiguration());
-            String dbPath = "/ruozedata/dw/data/ip2region.db";
-            fsDataInputStream = fileSystem.open(new Path(dbPath), bufferSize);
+            String dbPath = "/home/hadoop/app/ruozedata-dw/data/ip2region.db";
+            /*fsDataInputStream = fileSystem.open(new Path(dbPath), bufferSize);
             byteArrayOutputStream = new ByteArrayOutputStream();
             IOUtils.copyBytes(fsDataInputStream, byteArrayOutputStream, bufferSize);
-            byte[] bytes = byteArrayOutputStream.toByteArray();
+            byte[] bytes = byteArrayOutputStream.toByteArray();*/
             DbConfig config = null;
             try {
                 config = new DbConfig();
-                searcher = new DbSearcher(config, bytes);
+                searcher = new DbSearcher(config, dbPath);
             } catch (DbMakerConfigException e) {
                 e.printStackTrace();
             }

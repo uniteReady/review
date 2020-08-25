@@ -1,12 +1,13 @@
 package com.tianya.bigdata.homework.day20200812;
 
-import org.lionsoul.ip2region.DataBlock;
-import org.lionsoul.ip2region.DbConfig;
-import org.lionsoul.ip2region.DbSearcher;
-import org.lionsoul.ip2region.Util;
+import org.apache.hadoop.io.IOUtils;
+import org.lionsoul.ip2region.*;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.lang.reflect.Method;
+import java.nio.file.FileSystem;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -92,7 +93,23 @@ public class LogParser {
 
     }
 
-    public static void main(String[] args) throws ParseException {
+    public static void main(String[] args) throws Exception {
+        String dbLocalPath = "ruozeg9/ruozedata-homework/src/main/resources/ip2region.db";
+        /*FileInputStream filePartIn0 = new FileInputStream(new File(dbLocalPath));
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        IOUtils.copyBytes(filePartIn0, byteArrayOutputStream, 10240);
+        byte[] bytes = byteArrayOutputStream.toByteArray();*/
+        DbConfig config = null;
+        String log = "[29/Jan/2019:01:51:04 +0800]\t61.236.169.40\t-\t3415\t-\tPOST\thttp://tianyafu0/video/av52167210?a=b&c=d\t404\t1472\t1009\tMISS\tMozilla/5.0（compatible; AhrefsBot/5.0; +http://ahrefs.com/robot/）\ttext/html";
+        try {
+            config = new DbConfig();
+            DbSearcher searcher = new DbSearcher(config, dbLocalPath);
+            Access access = parseLog(searcher, log);
+            System.out.println(access);
+        } catch (DbMakerConfigException e) {
+            e.printStackTrace();
+        }
+
         /*String log = "[29/Jan/2019:01:51:04 +0800]\t61.236.169.40\t-\t3415\t-\tPOST\thttp://tianyafu0/video/av52167210?a=b&c=d\t404\t1472\t1009\tMISS\tMozilla/5.0（compatible; AhrefsBot/5.0; +http://ahrefs.com/robot/）\ttext/html";
         Access access = parseLog(log);
         System.out.println(access);*/
