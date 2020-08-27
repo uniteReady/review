@@ -28,7 +28,8 @@ import java.util.StringJoiner;
  */
 public class MockAccessLog {
 
-    public static final SimpleDateFormat FORMAT = new SimpleDateFormat("dd/MMM/yyyy:hh:mm:ss Z", Locale.US);
+//    public static final SimpleDateFormat FORMAT = new SimpleDateFormat("dd/MMM/yyyy:hh:mm:ss Z", Locale.US);
+    public static final SimpleDateFormat FORMAT = new SimpleDateFormat("dd/MM/yyyy:hh:mm:ss");
 
     public static final Random RANDOM = new Random();
 

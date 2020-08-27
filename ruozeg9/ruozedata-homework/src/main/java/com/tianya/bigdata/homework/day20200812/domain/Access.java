@@ -1,4 +1,4 @@
-package com.tianya.bigdata.homework.day20200812;
+package com.tianya.bigdata.homework.day20200812.domain;
 
 public class Access {
 

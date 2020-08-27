@@ -1,6 +1,7 @@
 package com.tianya.bigdata.homework.day20200812;
 
 import com.tianya.bigdata.homework.day20200801.FileUtils;
+import com.tianya.bigdata.homework.day20200812.domain.Access;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FSDataInputStream;
