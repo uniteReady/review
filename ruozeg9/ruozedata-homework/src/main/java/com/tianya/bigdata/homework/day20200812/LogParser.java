@@ -1,8 +1,13 @@
 package com.tianya.bigdata.homework.day20200812;
 
 import com.tianya.bigdata.homework.day20200812.domain.Access;
+import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.IOUtils;
 import org.lionsoul.ip2region.*;
 
+import java.beans.Transient;
 import java.io.*;
 import java.lang.reflect.Method;
 import java.text.ParseException;
@@ -11,24 +16,63 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 
-public class LogParser {
+public class LogParser implements Serializable {
 
     public static final SimpleDateFormat FORMAT = new SimpleDateFormat("dd/MMM/yyyy:hh:mm:ss Z", Locale.US);
 
     private static DbConfig config;
 
-    private static String dbPath = "ip2region.db";
-//    private static String dbPath = "F:\\study\\workspace\\review\\ruozeg9\\ruozedata-homework\\src\\main\\resources\\ip2region.db";
+    //    private static String dbPath = "ip2region.db";
+//    private static String dbPath = "/ruozedata/dw/data/ip2region.db";
+    private static String dbPath = "F:\\study\\workspace\\review\\ruozeg9\\ruozedata-homework\\src\\main\\resources\\ip2region.db";
 
-    private static DbSearcher searcher;
+
+
+
+    transient public static DbSearcher searcher;
+
+    static {
+        try {
+            searcher = getConnect();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    /**
+     * 建立数据库文件连接
+     *
+     * @throws Exception
+     */
+
+    public static DbSearcher getConnect() throws Exception {
+        config = new DbConfig();
+//        searcher = new DbSearcher(config, dbPath);
+        searcher = new DbSearcher(config, dbPath);
+        return searcher;
+    }
+
+
+    public static DbSearcher getConnect(FileSystem fileSystem) throws Exception {
+        FSDataInputStream in = fileSystem.open(new Path(dbPath));
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        IOUtils.copyBytes(in, byteArrayOutputStream, 2048);
+        byte[] bytes = byteArrayOutputStream.toByteArray();
+        config = new DbConfig();
+//        searcher = new DbSearcher(config, dbPath);
+        searcher = new DbSearcher(config, bytes);
+        return searcher;
+    }
 
     /**
      * 解析日志的时间
+     *
      * @param time
      * @return
      * @throws Exception
      */
-    public static Access analysisTime(String time,Access access) {
+    public static Access analysisTime(String time, Access access) {
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd/MM/yyyy:hh:mm:ss");
 
         Date timeParse = null;
@@ -54,8 +98,8 @@ public class LogParser {
 
     public static void main(String[] args) throws Exception {
         String log = "[01/01/2019:06:40:38]\t182.82.87.180\t-\t2837\t-\tPOST\thttp://tianyafu651/video/av5216721651?a=b&c=d\t404\t3886\t2330\tHIT\tMozilla/5.0（compatible; AhrefsBot/5.0; +http://ahrefs.com/robot/）\ttext/html";
-        Access access = parseLog3(log);
-        System.out.println(access);
+//        Access access = parseLog3(log);
+//        System.out.println(access);
         /*BufferedReader reader = new BufferedReader(new FileReader(file));
         String line = null;
         int count = 0;
@@ -82,12 +126,13 @@ public class LogParser {
 
     /**
      * 分析URL
+     *
      * @param url
      * @param access
      * @return
      * @throws Exception
      */
-    public static Access analysisUrl(String url,Access access){
+    public static Access analysisUrl(String url, Access access) {
         String[] urlSplits = url.split("\\?");
         String[] urlSplits2 = urlSplits[0].split(":");
 
@@ -110,34 +155,21 @@ public class LogParser {
     }
 
 
-
-
-
-    /**
-     * 建立数据库文件连接
-     * @throws Exception
-     */
-    public static void getConnect() throws Exception{
-        config = new DbConfig();
-        searcher = new DbSearcher(config, dbPath);
-    }
     /**
      * 查询ip
+     *
      * @param ip
      * @return
      * @throws Exception
      */
-    public static Access  analysisIp(String ip,Access access){
-        try{
-            if (searcher == null){
-                getConnect();
-            }
+    public static Access analysisIp(String ip, Access access, DbSearcher searcher) {
+        try {
             Method method = searcher.getClass().getMethod("btreeSearch", String.class);
             DataBlock dataBlock = null;
-            if (Util.isIpAddress(ip) == false ) {
+            if (Util.isIpAddress(ip) == false) {
                 System.out.println("Error: Invalid ip address");
             }
-            dataBlock  = (DataBlock) method.invoke(searcher, ip);
+            dataBlock = (DataBlock) method.invoke(searcher, ip);
 
             String ipInfo = dataBlock.getRegion();
             String[] ipInfos = ipInfo.split("\\|");
@@ -147,7 +179,7 @@ public class LogParser {
             access.setProvince(province);
             access.setCity(city);
             access.setIsp(isp);
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return access;
@@ -155,6 +187,7 @@ public class LogParser {
 
     /**
      * 关闭连接
+     *
      * @throws IOException
      */
     public static void closeConnect() throws IOException {
@@ -162,21 +195,17 @@ public class LogParser {
     }
 
 
-
-
-
-
-    public static Access parseLog3(String log) throws NumberFormatException {
+    public static Access parseLog3(String log, DbSearcher searcher) throws NumberFormatException {
         Access access = new Access();
         String[] splits = log.split("\t");
         //解析时间
         String time = splits[0];
         time = time.substring(1, time.length() - 1);
-        access = analysisTime(time,access);
+        access = analysisTime(time, access);
 
         //解析ip
         String ip = splits[1];
-        access = analysisIp(ip,access);
+        access = analysisIp(ip, access, searcher);
 
         String proxyIp = splits[2];
         String responseTime = splits[3];
@@ -184,7 +213,7 @@ public class LogParser {
         String method = splits[5];
         //解析URL
         String url = splits[6];
-        access = analysisUrl(url,access);
+        access = analysisUrl(url, access);
 
         String httpCode = splits[7];
         String requestSize = splits[8];
@@ -209,9 +238,7 @@ public class LogParser {
     }
 
 
-
-
-    public static Access parseLog(DbSearcher searcher,String log) throws ParseException {
+    public static Access parseLog(DbSearcher searcher, String log) throws ParseException {
 //        String log = "[29/Jan/2019:01:51:04 +0800]\t61.236.169.40\t-\t3415\t-\tPOST\thttp://tianyafu0/video/av52167210?a=b&c=d\t404\t1472\t1009\tMISS\tMozilla/5.0（compatible; AhrefsBot/5.0; +http://ahrefs.com/robot/）\ttext/html";
 //        String log = "[29/Jan/2019:01:51:04 +0800]\t61.235.87.102\t-\t3415\t-\tPOST\thttp://tianyafu0/video/av52167210?a=b&c=d\t404\t1472\t1009\tMISS\tMozilla/5.0（compatible; AhrefsBot/5.0; +http://ahrefs.com/robot/）\ttext/html";
 
@@ -287,7 +314,7 @@ public class LogParser {
     }
 
 
-    public static Access parseLog2(DbSearcher searcher,String log){
+    public static Access parseLog2(DbSearcher searcher, String log) {
 //        String log = "[29/Jan/2019:01:51:04 +0800]\t61.236.169.40\t-\t3415\t-\tPOST\thttp://tianyafu0/video/av52167210?a=b&c=d\t404\t1472\t1009\tMISS\tMozilla/5.0（compatible; AhrefsBot/5.0; +http://ahrefs.com/robot/）\ttext/html";
 //        String log = "[29/Jan/2019:01:51:04 +0800]\t61.235.87.102\t-\t3415\t-\tPOST\thttp://tianyafu0/video/av52167210?a=b&c=d\t404\t1472\t1009\tMISS\tMozilla/5.0（compatible; AhrefsBot/5.0; +http://ahrefs.com/robot/）\ttext/html";
 
@@ -359,20 +386,12 @@ public class LogParser {
             access.setParams(params);
             access.setResponseSize(Long.parseLong(responseSize));
             return access;
-        }catch (Exception e){
+        } catch (Exception e) {
             return null;
         }
 
 
     }
-
-
-
-
-
-
-
-
 
 
     public static String analizeIp(String ip) {

@@ -1,0 +1,17 @@
+nodes:
+  - name: spark_type_job
+    type: spark
+    config:
+      master: yarn
+      execution-jar: ruozedata-homework-1.0.jar
+      class: com.tianya.bigdata.tututu.homework.tu20200824.SparkETLJob
+      deploy-mode: client
+      name: spark_log_etl
+      jars: /home/hadoop/lib/ip2region-1.7.2.jar,/home/hadoop/app/ruozedata-dw/data/ip2region.db
+      driver-memory: 2048M
+      executor-memory: 2048M
+      executor-cores: 2
+      num-executors: 2
+      conf.spark.testing.memory: 2147480000
+      params: /ruozedata/dw/raw/access/20190101 /ruozedata/dw/spark_tmp/access/20190101
+
