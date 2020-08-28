@@ -4,14 +4,29 @@ nodes:
     config:
       master: yarn
       execution-jar: ruozedata-homework-1.0.jar
-      class: com.tianya.bigdata.tututu.homework.tu20200824.SparkETLJob
+      class: com.tianya.bigdata.tututu.homework.tu20200824.SparkETL
       deploy-mode: client
       name: spark_log_etl
-      jars: /home/hadoop/lib/ip2region-1.7.2.jar,/home/hadoop/app/ruozedata-dw/data/ip2region.db
+      jars: ip2region-1.7.2.jar,paranamer-2.8.jar,ip2region.db
       driver-memory: 2048M
       executor-memory: 2048M
       executor-cores: 2
       num-executors: 2
       conf.spark.testing.memory: 2147480000
-      params: /ruozedata/dw/raw/access/20190101 /ruozedata/dw/spark_tmp/access/20190101
-
+      conf.spark.execute.time: ${dt}
+  - name: hive_add_partition
+    type: hive
+    dependsOn:
+      - spark_type_job
+    config:
+      user.to.proxy: hadoop
+      hive.script: hive.hql
+      hiveconf.dt: ${dt}
+  - name: hive_etl_job
+    type: hive
+    dependsOn:
+      - hive_add_partition
+    config:
+      user.to.proxy: hadoop
+      hive.script: hive_etl.hql
+      hiveconf.dt: ${dt}
