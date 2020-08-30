@@ -18,7 +18,7 @@ import java.util.Locale;
 
 public class LogParser implements Serializable {
 
-    public static final SimpleDateFormat FORMAT = new SimpleDateFormat("dd/MMM/yyyy:hh:mm:ss Z", Locale.US);
+    public static final SimpleDateFormat FORMAT = new SimpleDateFormat("dd/MM/yyyy:hh:mm:ss");
 
     private static DbConfig config;
 

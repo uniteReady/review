@@ -1,0 +1,6 @@
+nodes:
+  - name: hadoop_wc
+    type: command
+    config:
+      command: ${hadoop.home}/bin/hadoop jar /home/hadoop/lib/hadoop_demo-1.0.jar com.tianya.bigdata.mr.WordCountDriver /names.txt /out/result/wc
+      user.to.proxy: hadoop
