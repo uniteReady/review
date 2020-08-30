@@ -3,6 +3,9 @@ package com.tianya.bigdata.tututu.homework.tu20200825
 import org.apache.spark.rdd.RDD
 import org.apache.spark.{SparkConf, SparkContext}
 
+/**
+ * Aggregate算子的demo
+ */
 object AggregateApp {
 
 
