@@ -28,8 +28,6 @@ import java.util.Random;
  *  ) comment '学生成绩表，大表' row format delimited fields terminated by '\t' location '/ruozedata/hive/student_scores' ;
  *
  * 要实现 select subject,avg(score)  from student_scores group by subject;的功能
- *
- *
  */
 public class GroupByMRDriver {
 
@@ -45,7 +43,6 @@ public class GroupByMRDriver {
     }
 
     public static class MyReducer1 extends Reducer<Text, Text,Text,Text> {
-
         @Override
         protected void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
             double sum = 0;
@@ -56,10 +53,8 @@ public class GroupByMRDriver {
                 cnt += Double.valueOf(splits[1]);
             }
             context.write(key,new Text(sum+"|"+cnt));
-
         }
     }
-
 
     public static class MyMapper2 extends Mapper<LongWritable,Text,Text,Text>{
         @Override
@@ -70,7 +65,6 @@ public class GroupByMRDriver {
     }
 
     public static class MyReducer2 extends Reducer<Text, Text,Text,Text> {
-
         @Override
         protected void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
             double sum = 0;
@@ -82,11 +76,8 @@ public class GroupByMRDriver {
             }
             String avg = (sum/cnt)+"";
             context.write(key,new Text(avg));
-
         }
     }
-
-
 
     public static void main(String[] args) throws Exception{
         String in = "out/studentScores.txt";
@@ -95,64 +86,46 @@ public class GroupByMRDriver {
         //获取一个job
         Configuration conf = new Configuration();
         Job job1 = Job.getInstance(conf);
-
         FileUtils.delete(conf,out1);
         FileUtils.delete(conf,out2);
-
         //设置主类
         job1.setJarByClass(GroupByMRDriver.class);
-
         //设置map和reduce的类
         job1.setMapperClass(MyMapper1.class);
         job1.setReducerClass(MyReducer1.class);
-
         //设置map和reduce的输出key value类型
         job1.setMapOutputKeyClass(Text.class);
         job1.setMapOutputValueClass(Text.class);
-
         job1.setOutputKeyClass(Text.class);
         job1.setOutputValueClass(Text.class);
-
         //设置输入输出路径
         FileInputFormat.setInputPaths(job1,in);
         FileOutputFormat.setOutputPath(job1,new Path(out1));
-
-
         //获取job2
         Job job2 = Job.getInstance(conf);
-
         //设置主类
         job2.setJarByClass(GroupByMRDriver.class);
-
         //设置map和reduce的类
         job2.setMapperClass(MyMapper2.class);
         job2.setReducerClass(MyReducer2.class);
-
         //设置map和reduce的输出的key value类型
         job2.setMapOutputKeyClass(Text.class);
         job2.setMapOutputValueClass(Text.class);
-
         job2.setOutputKeyClass(Text.class);
         job2.setOutputValueClass(Text.class);
-
         //设置输入输出路径
         FileInputFormat.setInputPaths(job2,out1);
         FileOutputFormat.setOutputPath(job2,new Path(out2));
-
         JobControl jobControl = new JobControl("MyGroup");
         ControlledJob cjob1 = new ControlledJob(job1.getConfiguration());
         ControlledJob cjob2 = new ControlledJob(job2.getConfiguration());
         cjob2.addDependingJob(cjob1);
-
         jobControl.addJob(cjob1);
         jobControl.addJob(cjob2);
-
         new Thread(jobControl).start();
         while(! jobControl.allFinished()){
             Thread.sleep(100);
         }
         jobControl.stop();
-
-
     }
 }

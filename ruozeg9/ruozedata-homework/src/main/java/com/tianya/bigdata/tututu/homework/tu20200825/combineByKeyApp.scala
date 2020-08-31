@@ -60,15 +60,8 @@ object combineByKeyApp {
         (acc1._1+acc2._1,acc1._2+acc2._2)
       }
     ).map({case(key,value) => (key,value._1/value._2)})
-
-
     avgScoreRDD.collect.foreach(println)
-
-
     sc.stop()
-
   }
-
 }
-
 case class ScoreDetail(studentName: String, subject: String, score: Float)

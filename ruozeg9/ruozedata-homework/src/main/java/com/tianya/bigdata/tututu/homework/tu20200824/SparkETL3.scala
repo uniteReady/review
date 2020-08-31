@@ -40,7 +40,6 @@ object SparkETL3 {
 
     val l1: (String, DbSearcher, Method) => Access = SparkLogETLUtils2.parseLog _
 
-
     val value: RDD[String] = sc.textFile(input).filter(x => {
       !"-".equals(x.split("\t")(9))
     }).mapPartitions(

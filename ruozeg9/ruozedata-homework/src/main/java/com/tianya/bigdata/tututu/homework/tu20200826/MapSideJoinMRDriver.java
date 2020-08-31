@@ -43,13 +43,8 @@ import java.util.Map;
 public class MapSideJoinMRDriver {
 
     public static class MyMapper extends Mapper<LongWritable, Text, StudentSubjectScore, NullWritable>{
-
         private Map<Integer,String> studentInfosMap = new HashMap<>();
-
-
         BufferedReader in = null;
-
-
         /**
          * 在setup中直接将小表的数据读进来存入一个map中
          * @param context
@@ -68,7 +63,6 @@ public class MapSideJoinMRDriver {
                         Integer subjectId = Integer.valueOf(splits[2]);
                         String studentName = splits[1];
                         studentInfosMap.put(subjectId,studentName);
-
                     }
                 }
             }
@@ -88,33 +82,20 @@ public class MapSideJoinMRDriver {
 
     public static void main(String[] args) throws Exception {
         String out = "out/studentSubjectScore";
-
         String bigTable = "out/studentScores.txt";
         //创建一个Job
         org.apache.hadoop.conf.Configuration conf = new Configuration();
         Job job = Job.getInstance(conf);
-
         FileUtils.delete(conf,out);
-
 //        job.addCacheArchive(new URI("hdfs://hadoop01:9000/ruozedata/hive/student_infos/studentInfos.txt"));
         job.addCacheArchive(new URI("out/studentInfos.txt"));
-
         job.setJarByClass(MapSideJoinMRDriver.class);
-
         job.setMapOutputKeyClass(StudentSubjectScore.class);
         job.setMapOutputValueClass(NullWritable.class);
-
         job.setMapperClass(MyMapper.class);
-
         FileInputFormat.setInputPaths(job,new Path(bigTable));
         FileOutputFormat.setOutputPath(job,new Path(out));
-
         boolean flag = job.waitForCompletion(true);
-
         System.exit(flag?0:1);
-
-
     }
-
-
 }

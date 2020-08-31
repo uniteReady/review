@@ -16,9 +16,7 @@ object combineByKeyWithClassTagApp {
   def main(args: Array[String]): Unit = {
     val conf: SparkConf = new SparkConf()
       .setMaster("local[2]").setAppName(this.getClass.getSimpleName)
-
     val sc: SparkContext = new SparkContext(conf)
-
 
     val rdd1 = sc.makeRDD(Array(("A", 1), ("A", 2), ("B", 1), ("B", 2),("B",3),("B",4), ("C", 1)))
     rdd1.combineByKeyWithClassTag(
@@ -35,12 +33,6 @@ object combineByKeyWithClassTagApp {
         c1 + "$" + c2
       }
     ).collect.foreach(println)
-
-
-
-
-
     sc.stop()
   }
-
 }

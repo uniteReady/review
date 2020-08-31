@@ -36,13 +36,10 @@ object SparkETL {
     if (fileSystem.exists(tmpHDSFPath)) {
       fileSystem.delete(tmpHDSFPath, true)
     }
-
-
     //使用 @transient 来避免序列化
     @transient lazy val config: DbConfig = SparkLogETLUtils.getDbConfig
     @transient lazy val searcher: DbSearcher = SparkLogETLUtils.getDbSearcher(config, dbPath)
     @transient lazy val m: Method = SparkLogETLUtils.getMethod(searcher)
-
 
     //先过滤脏数据，filter之后再处理日志解析。这里因为本身只有904条脏数据，filter之后就不用coalesce算子了。
     sc.textFile(input).filter(x => {
@@ -51,7 +48,6 @@ object SparkETL {
       val access = SparkLogETLUtils.parseLog(log, searcher, m)
       access.toString
     }).saveAsTextFile(tmpPath)
-
 
     //移除对应的原有的分区目录
     println("开始移除对应的原有的分区目录" + output)
@@ -68,11 +64,9 @@ object SparkETL {
       val filePath = fileStatus.getPath()
       fileSystem.rename(filePath, outputPath)
     }
-
     //删除临时目录及数据
     println("开始删除临时目录及数据" + tmpPath)
     fileSystem.delete(tmpHDSFPath, true)
-
     sc.stop()
   }
 

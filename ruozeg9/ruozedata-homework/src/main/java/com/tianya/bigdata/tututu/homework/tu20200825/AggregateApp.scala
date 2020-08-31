@@ -12,11 +12,8 @@ object AggregateApp {
   def main(args: Array[String]): Unit = {
     val conf: SparkConf = new SparkConf()
       .setMaster("local[2]").setAppName(this.getClass.getSimpleName)
-
     val sc: SparkContext = new SparkContext(conf)
-
     val numRDD= sc.parallelize(1 to 4, 2)
-
     val fun1: (Int, Int) => Int = _ + _
     val fun2: (Int, Int) => Int = _ * _
 
@@ -48,10 +45,6 @@ object AggregateApp {
      */
     val result: Int = numRDD.aggregate(4)(fun1, fun2)
     println("结果是:"+result)
-
-
-
-
     sc.stop()
   }
 
