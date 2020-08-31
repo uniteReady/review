@@ -41,7 +41,8 @@ object AggregateApp {
      *
      * 总结：
      * zeroValue是初始值
-     * fun1会作用在每一个分区的数据上，初始值为 zeroValue 得出每一个分区的计算结果
+     * fun1会作用在每一个分区的第一个数据上，初始值为 zeroValue 与分区内的第一个数据做计算，得出结果，将此结果值作为分区内下一个数据的zeroValue。
+     * 即上一步的结果作为下一步的zeroValue
      * 然后以zeroValue为初值，将fun2作用在每一个上面得到的分区计算结果
      *
      */
