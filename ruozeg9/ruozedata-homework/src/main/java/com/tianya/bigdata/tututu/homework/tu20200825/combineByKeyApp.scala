@@ -8,7 +8,10 @@ import org.apache.spark.{HashPartitioner, SparkConf, SparkContext}
  * https://blog.csdn.net/Gpwner/article/details/73349589
  *
  * 底层调用的是combineByKeyWithClassTag算子
- * createCombiner函数:有多少不同的key就调用多少次，相当于每个key的value组生成一个初始值
+ * createCombiner：每个分区中每个key的第一个value会运行这个函数，从v 变成 c
+ * mergeValue：每个分区中每个key的第二个value开始，依次运行这个函数，上一次运行得到的c与当前value进行运算；
+ * 对于第二个value来说，上一次运行得到的c就是经过createCombiner运算的c
+ * mergeCombiners：将不同分区中的相同的key所对应的value进行运算
  *
  *
  */
