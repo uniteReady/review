@@ -35,7 +35,7 @@
         <spark.version>2.4.6</spark.version>
         <flume.version>1.6.0-cdh5.16.2</flume.version>
         <hbase.version>1.2.0-cdh5.16.2</hbase.version>
-        <zookeeper.version>3.4.5-cdh5.16.2</zookeeper.version>
+        <zookeeper.version>3.4.14</zookeeper.version>
         <curator.version>4.0.0</curator.version>
     </properties>
 
