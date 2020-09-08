@@ -33,7 +33,7 @@ object combineByKeyApp {
       ScoreDetail("C","Math",90),
       ScoreDetail("C","English",80),
       ScoreDetail("D","Math",91),
-      ScoreDetail("D","English",80),
+      ScoreDetail("D","English",80)
     )
 
     val scoreWithKey = for (elem <- scores) yield (elem.studentName,elem)
