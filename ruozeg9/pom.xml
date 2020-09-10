@@ -40,6 +40,7 @@
         <curator.version>4.0.0</curator.version>
 <!--        <jackson.version>2.8.11</jackson.version>-->
         <jackson.version>2.11.0</jackson.version>
+        <mysql.version>5.1.47</mysql.version>
     </properties>
 
     <repositories>
@@ -195,6 +196,12 @@
             <groupId>com.thoughtworks.paranamer</groupId>
             <artifactId>paranamer</artifactId>
             <version>2.8</version>
+        </dependency>
+
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <version>${mysql.version}</version>
         </dependency>
 
 

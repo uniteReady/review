@@ -1,20 +1,31 @@
 package com.tianya.bigdata.homework.day20200901.sparketl.utils
 
 import java.lang.reflect.Method
+import java.sql.{Connection, DriverManager}
 import java.text.{ParseException, SimpleDateFormat}
 import java.util.{Calendar, Date}
 
 import com.tianya.bigdata.homework.day20200812.domain.Access
+import org.apache.spark.SparkException
 import org.lionsoul.ip2region.{DataBlock, DbConfig, DbSearcher}
 
 object SparkLogETLUtils2 {
-  def getMethod(searcher:DbSearcher): Method = searcher.getClass.getMethod("btreeSearch", classOf[String])
+  def getConnection(): Connection = {
+    Class.forName("com.mysql.jdbc.Driver")
+    val url = "jdbc:mysql://hadoop:3306/ruozedata?autoReconnect=true&useUnicode=true&characterEncoding=UTF-8"
+    val username = "root"
+    val password = "root"
+    val conn = DriverManager.getConnection(url,username,password)
+    conn
+  }
 
-  def getDbSearcher(config: DbConfig, dbPath: String): DbSearcher = new DbSearcher(config,dbPath)
+  def getMethod(searcher: DbSearcher): Method = searcher.getClass.getMethod("btreeSearch", classOf[String])
+
+  def getDbSearcher(config: DbConfig, dbPath: String): DbSearcher = new DbSearcher(config, dbPath)
 
   def getDbConfig(): DbConfig = new DbConfig
 
-  def parseLog(log:String,searcher:DbSearcher,m:Method):Access = {
+  def parseLog(log: String, searcher: DbSearcher, m: Method): Access = {
     val split: Array[String] = log.split("\t")
     val access = new Access()
     val ip = split(1)
@@ -50,11 +61,11 @@ object SparkLogETLUtils2 {
 
     val region: String = dataBlock.getRegion
     val bloks: Array[String] = region.split("\\|")
-    for (block <- bloks) {
-      province = bloks(2)
-      city = bloks(3)
-      isp = bloks(4)
-    }
+    //    for (block <- bloks) {
+    province = bloks(2)
+    city = bloks(3)
+    isp = bloks(4)
+    //    }
     access.setProvince(province)
     access.setCity(city)
     access.setIsp(isp)

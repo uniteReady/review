@@ -1,12 +1,16 @@
 package com.tianya.bigdata.homework.day20200905.sparketlwithAccumulator.etl
 
+import java.lang
 import java.lang.reflect.Method
+import java.sql.PreparedStatement
+import java.text.SimpleDateFormat
 
 import com.tianya.bigdata.homework.day20200812.domain.Access
 import com.tianya.bigdata.homework.day20200901.sparketl.utils.{FileUtils, SparkLogETLUtils2}
 import org.apache.hadoop.fs.{FileSystem, LocatedFileStatus, Path, RemoteIterator}
-import org.apache.spark.rdd.RDD
-import org.apache.spark.{SparkConf, SparkContext}
+import org.apache.spark.rdd.{JdbcRDD, RDD}
+import org.apache.spark.util.LongAccumulator
+import org.apache.spark.{SparkConf, SparkContext, SparkException}
 import org.lionsoul.ip2region.{DbConfig, DbSearcher}
 
 /**
@@ -16,6 +20,9 @@ object SparkETL3 {
 
   def main(args: Array[String]): Unit = {
     //    val uri = "hdfs://hadoop01:9000"
+    val sdf: SimpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+    val startTimeMillis = System.currentTimeMillis()
+    val startTime = sdf.format(sdf.parse(sdf.format(startTimeMillis)))
     val dbPath = "ip2region.db"
     val conf = new SparkConf()
     val sc = new SparkContext(conf)
@@ -24,13 +31,13 @@ object SparkETL3 {
     val tmpPath = s"/ruozedata/dw/ods_tmp/access/${executionTime}"
     val output = s"/ruozedata/dw/ods/access/d=${executionTime}"
     val configuration = sc.hadoopConfiguration
-    FileUtils.delete(configuration,tmpPath)
-    FileUtils.delete(configuration,output)
+    FileUtils.delete(configuration, tmpPath)
+    FileUtils.delete(configuration, output)
     val fileSystem = FileSystem.get(configuration)
     val tmpHDSFPath = new Path(tmpPath)
-//    if (fileSystem.exists(tmpHDSFPath)) {
-//      fileSystem.delete(tmpHDSFPath, true)
-//    }
+    //    if (fileSystem.exists(tmpHDSFPath)) {
+    //      fileSystem.delete(tmpHDSFPath, true)
+    //    }
 
     val m1: (DbSearcher) => Method = SparkLogETLUtils2.getMethod _
 
@@ -40,8 +47,17 @@ object SparkETL3 {
 
     val l1: (String, DbSearcher, Method) => Access = SparkLogETLUtils2.parseLog _
 
+    val validAccumulator: LongAccumulator = sc.longAccumulator("有效数据")
+    val notValidAccumulator: LongAccumulator = sc.longAccumulator("无效数据")
+    val allAccumulator: LongAccumulator = sc.longAccumulator("全部数据")
+
     val value: RDD[String] = sc.textFile(input).filter(x => {
-      !"-".equals(x.split("\t")(9))
+      allAccumulator.add(1L)
+      val responsesize: String = x.split("\t")(9)
+      if ("-".equals(responsesize)) {
+        notValidAccumulator.add(1L)
+      }
+      !"-".equals(responsesize)
     }).mapPartitions(
       iter => {
         val searcher: DbSearcher = s1(c1(), dbPath)
@@ -49,6 +65,7 @@ object SparkETL3 {
         iter.map(
           log => {
             val access = l1(log, searcher, method)
+            validAccumulator.add(1L)
             access.toString
           }
         )
@@ -59,8 +76,8 @@ object SparkETL3 {
     //移除对应的原有的分区目录
     println("开始移除对应的原有的分区目录" + output)
     val outputPath = new Path(output)
-//    if (fileSystem.exists(outputPath)) fileSystem.delete(outputPath, true)
-    FileUtils.delete(configuration,output)
+    //    if (fileSystem.exists(outputPath)) fileSystem.delete(outputPath, true)
+    FileUtils.delete(configuration, output)
     //创建对应的分区目录
     println("开始创建对应的分区目录" + output)
     fileSystem.mkdirs(outputPath)
@@ -77,7 +94,43 @@ object SparkETL3 {
     println("开始删除临时目录及数据" + tmpPath)
     fileSystem.delete(tmpHDSFPath, true)
 
+    val endTimeMillis = System.currentTimeMillis()
+    val endTime = sdf.format(sdf.parse(sdf.format(endTimeMillis)))
+
+    val runtimes = endTimeMillis - startTimeMillis
+
+    val jobInfos = List(
+      JobInfo("spark_etl",allAccumulator.value.toInt,validAccumulator.value.toInt,notValidAccumulator.value.toInt,runtimes.toInt,executionTime,startTime,endTime)
+    )
+
+    val jobInfoRDD: RDD[JobInfo] = sc.parallelize(jobInfos)
+
+    jobInfoRDD.foreachPartition(
+      partition => {
+        val conn = SparkLogETLUtils2.getConnection()
+        val sql = "insert into job_infos(task_name,totals,formats,`errors`,run_times,`day`,start_time,end_time) values(?,?,?,?,?,?,?,?)"
+        val statement: PreparedStatement = conn.prepareStatement(sql)
+        partition.foreach(
+          jobInfo => {
+            statement.setString(1, jobInfo.taskName)
+            statement.setInt(2, jobInfo.totals)
+            statement.setInt(3, jobInfo.formats)
+            statement.setInt(4, jobInfo.errors)
+            statement.setInt(5, jobInfo.runTimes)
+            statement.setString(6, jobInfo.day)
+            statement.setString(7, jobInfo.startTime)
+            statement.setString(8, jobInfo.endTime)
+            statement.executeUpdate
+          }
+        )
+      }
+    )
+
+
     sc.stop()
   }
 
 }
+
+
+case class JobInfo(taskName:String,totals:Int,formats:Int,errors:Int,runTimes:Int,day:String,startTime:String,endTime:String)
