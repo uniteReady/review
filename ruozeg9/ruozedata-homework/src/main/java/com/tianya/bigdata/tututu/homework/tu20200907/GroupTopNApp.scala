@@ -1,17 +1,24 @@
 package com.tianya.bigdata.tututu.homework.tu20200907
 
+import org.apache.spark.broadcast.Broadcast
+import org.apache.spark.internal.Logging
 import org.apache.spark.rdd.RDD
 import org.apache.spark.{SparkConf, SparkContext}
 
-object GroupTopNApp {
+object GroupTopNApp extends Logging {
 
   def main(args: Array[String]): Unit = {
     val conf = new SparkConf()
       .setMaster("local[2]").setAppName(this.getClass.getSimpleName)
     val sc = new SparkContext(conf)
+    val topN: Int = conf.get("spark.homework.topn", "2").toInt
+    log.info(s"...........本次作业取top$topN")
     val path = "ruozeg9/ruozedata-homework/src/main/java/com/tianya/bigdata/tututu/homework/tu20200907/data/data.txt"
 
     val lineRDD: RDD[String] = sc.textFile(path, 2)
+
+
+    val topNBrodcast: Broadcast[Int] = sc.broadcast(topN)
 
 
     val pairRDD: RDD[((String, String), Int)] = lineRDD.map(line => {
@@ -38,11 +45,12 @@ object GroupTopNApp {
     aggRDD.map(x => {
       val domain: String = x._1
       val urlCntList: List[(String, Int)] = x._2
-      val top2List: List[(String, Int)] = urlCntList.sortBy(-_._2).take(2)
+      //数据量大的时候这里sort可能会OOM
+      val top2List: List[(String, Int)] = urlCntList.sortBy(-_._2).take(topNBrodcast.value)
       (domain, top2List)
     }).flatMap(x => {
       val domain: String = x._1
-      x._2.map(tup => (domain, tup._1, tup._2))
+      x._2.map(tup => domain + "\t" + tup._1 + "\t" + tup._2)
     }).foreach(println)
 
     sc.stop()
