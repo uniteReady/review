@@ -1,6 +1,7 @@
 package com.tianya.bigdata.homework.day20200905.sparketlwithAccumulator.utils
 
 import java.lang.reflect.Method
+import java.sql.{Connection, DriverManager}
 import java.text.{ParseException, SimpleDateFormat}
 import java.util.{Calendar, Date}
 
@@ -8,6 +9,15 @@ import com.tianya.bigdata.homework.day20200812.domain.Access
 import org.lionsoul.ip2region.{DataBlock, DbConfig, DbSearcher}
 
 object SparkLogETLUtils2 {
+
+  def getConnection(): Connection = {
+    Class.forName("com.mysql.jdbc.Driver")
+    val url = "jdbc:mysql://hadoop01:3306/ruozedata?autoReconnect=true&useUnicode=true&characterEncoding=UTF-8"
+    val username = "root"
+    val password = "root"
+    val conn = DriverManager.getConnection(url,username,password)
+    conn
+  }
   def getMethod(searcher:DbSearcher): Method = searcher.getClass.getMethod("btreeSearch", classOf[String])
 
   def getDbSearcher(config: DbConfig, dbPath: String): DbSearcher = new DbSearcher(config,dbPath)

@@ -12,7 +12,7 @@ import org.lionsoul.ip2region.{DataBlock, DbConfig, DbSearcher}
 object SparkLogETLUtils2 {
   def getConnection(): Connection = {
     Class.forName("com.mysql.jdbc.Driver")
-    val url = "jdbc:mysql://hadoop:3306/ruozedata?autoReconnect=true&useUnicode=true&characterEncoding=UTF-8"
+    val url = "jdbc:mysql://hadoop01:3306/ruozedata?autoReconnect=true&useUnicode=true&characterEncoding=UTF-8"
     val username = "root"
     val password = "root"
     val conn = DriverManager.getConnection(url,username,password)

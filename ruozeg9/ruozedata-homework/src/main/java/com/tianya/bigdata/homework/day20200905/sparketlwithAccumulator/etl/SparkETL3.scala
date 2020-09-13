@@ -1,12 +1,11 @@
 package com.tianya.bigdata.homework.day20200905.sparketlwithAccumulator.etl
 
-import java.lang
 import java.lang.reflect.Method
 import java.sql.PreparedStatement
 import java.text.SimpleDateFormat
 
 import com.tianya.bigdata.homework.day20200812.domain.Access
-import com.tianya.bigdata.homework.day20200901.sparketl.utils.{FileUtils, SparkLogETLUtils2}
+import com.tianya.bigdata.homework.day20200905.sparketlwithAccumulator.utils.{FileUtils, SparkLogETLUtils2}
 import org.apache.hadoop.fs.{FileSystem, LocatedFileStatus, Path, RemoteIterator}
 import org.apache.spark.rdd.{JdbcRDD, RDD}
 import org.apache.spark.util.LongAccumulator
