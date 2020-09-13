@@ -5,6 +5,26 @@ import org.apache.spark.internal.Logging
 import org.apache.spark.rdd.RDD
 import org.apache.spark.{SparkConf, SparkContext}
 
+/**
+ * Hive SQL
+ * select
+ * a.domain,
+ * a.url,
+ * a.cnt
+ * from
+ * (select
+ * t.domain,
+ * t.url,
+ * t.cnt,
+ * row_number() over(partition by t.domain order by t.cnt desc ) rank
+ * from
+ * (select
+ * domain,
+ * url,
+ * count(*) as cnt
+ * from ruozedata.hive_top_n group by domain,url) t ) a
+ * where a.rank <3;
+ */
 object GroupTopNApp extends Logging {
 
   def main(args: Array[String]): Unit = {
