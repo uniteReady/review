@@ -20,6 +20,7 @@
         <module>ruoze-hadoop-project</module>
         <module>ruoze-zk</module>
         <module>ruoze-spark</module>
+        <module>ruoze-shell</module>
     </modules>
 
     <name>ruoze-g9</name>
